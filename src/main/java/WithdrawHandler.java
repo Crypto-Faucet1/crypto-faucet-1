@@ -27,7 +27,7 @@ public class WithdrawHandler {
         try {
             File file1 = new File("addresses.json");
             result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         JSONArray jsonArray = new JSONArray(result);
         for (int i = 0; i < jsonArray.length(); i++) {
@@ -96,7 +96,7 @@ public class WithdrawHandler {
                     total = total + balance;
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         jsonArrayTop.put(command);
         jsonArrayTop.put(total);

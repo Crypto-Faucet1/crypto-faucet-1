@@ -13,11 +13,11 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ClaimHandler {
-    public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-dd-MM HH:mm:ss");
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-dd-MM HH:mm:ss");
     public static Double sumoRate = 0.00013826;
     public static Double bitcoinRate = 0.0;
 
-    public ClaimHandler() {
+    ClaimHandler() {
         Timer updateTimer = new Timer();
         updateTimer.scheduleAtFixedRate(new UpdateTask(), 0, 1800000);
     }
@@ -50,6 +50,7 @@ public class ClaimHandler {
             int claims = 0;
             int claimsToday = 0;
             int lastClaimDay = 0;
+            int lastBonusDay = 0;
             int num = -1;
             try {
                 File file1 = new File("addresses.json");
@@ -74,16 +75,23 @@ public class ClaimHandler {
                     }
                     try {
                         totalPaid = addr.getDouble("totalPaid");
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                     }
                     try {
                         claimsToday = addr.getInt("claimsToday");
                         lastClaimDay = addr.getInt("lastClaimDay");
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
+                    }
+                    try {
+                        lastBonusDay = addr.getInt("lastBonusDay");
+                    } catch (Exception ignored) {
 
                     }
                 }
             }
+            Calendar cal = Calendar.getInstance();
+            int day = cal.get(Calendar.DAY_OF_MONTH);
+
             double claimAmount = 0;
             Date date = new Date();
             long dif = date.getTime() - lastClaim;
@@ -92,17 +100,15 @@ public class ClaimHandler {
                     dailyLastClaim = date.getTime();
                 }
                 long dif2 = date.getTime() - dailyLastClaim;
-                if (dif2 >= 43200000 && dif2 <= 172800000) {
-                    if (dailyBonus < 0.9) {
+                if (dif2 >= 43200000 && dif2 <= 172800000 && lastBonusDay != day) {
+                    if (dailyBonus < 0.99) {
                         dailyBonus = dailyBonus + 0.01;
+                        lastBonusDay = day;
                         dailyLastClaim = date.getTime();
                     }
                 } else if (dif2 >= 172800000) {
                     dailyBonus = 0;
                 }
-
-                Calendar cal = Calendar.getInstance();
-                int day = cal.get(Calendar.DAY_OF_MONTH);
 
                 if (day == lastClaimDay) {
                     claimsToday = claimsToday + 1;
@@ -132,6 +138,7 @@ public class ClaimHandler {
                 newItem.put("totalPaid", totalPaid);
                 newItem.put("lastClaimDay", lastClaimDay);
                 newItem.put("claimsToday", claimsToday);
+                newItem.put("lastBonusDay", lastBonusDay);
                 jsonArray.put(newItem);
             }
 
@@ -224,7 +231,7 @@ public class ClaimHandler {
         return comp;
     }
 
-    double getClaimAmount(int claimsToday) {
+    private double getClaimAmount(int claimsToday) {
         Random rand = new Random();
         int value = rand.nextInt(100) + 1;
         double amount = 0.00000020 / sumoRate;
@@ -256,11 +263,11 @@ public class ClaimHandler {
         } else if (claimsToday >= 16 && claimsToday <= 20) {
             amount = amount * 0.79;
         } else if (claimsToday >= 21 && claimsToday <= 26) {
-            amount = amount * 0.74;
+            amount = amount * 0.70;
         } else if (claimsToday >= 27 && claimsToday <= 35) {
-            amount = amount * 0.55;
+            amount = amount * 0.45;
         } else if (claimsToday >= 36 && claimsToday <= 45) {
-            amount = amount * 0.40;
+            amount = amount * 0.3;
         } else if (claimsToday >= 46 && claimsToday <= 100) {
             amount = amount * 0.2;
         }

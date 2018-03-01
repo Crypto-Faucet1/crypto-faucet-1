@@ -30,11 +30,11 @@ public class GetBalance {
                     if (addr.getString("address").equals(address)) {
                         jsonObject = addr;
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
 
                 }
             }
-        } catch (Exception e){}
+        } catch (Exception ignored){}
         return jsonObject.toString();
     }
 
@@ -56,11 +56,11 @@ public class GetBalance {
                     if (addr.getString("address").equals(address)) {
                         balance = addr.getDouble("balance");
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
 
                 }
             }
-        } catch (Exception e){}
+        } catch (Exception ignored){}
         return round(balance, 5) + "";
     }
 
@@ -82,11 +82,11 @@ public class GetBalance {
                     if (addr.getString("address").equals(address)) {
                         balance = addr.getDouble("totalPaid");
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
 
                 }
             }
-        } catch (Exception e){}
+        } catch (Exception ignored){}
         return balance + "";
     }
 
