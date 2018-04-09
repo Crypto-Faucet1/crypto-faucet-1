@@ -1,5 +1,7 @@
 import spark.Spark;
 
+import java.util.Date;
+
 import static spark.Spark.get;
 import static spark.Spark.path;
 import static spark.Spark.post;
@@ -12,6 +14,7 @@ public class x {
         GetBalance getBalance = new GetBalance();
         WithdrawHandler withdrawHandler = new WithdrawHandler();
         RateHandler rateHandler = new RateHandler();
+        SetBonusHandler setBonusHandler = new SetBonusHandler();
 
         post("/claim", claim::claimSumo);
         get("/balance", getBalance::getBalance);
@@ -25,6 +28,6 @@ public class x {
             post("/remove", withdrawHandler::removeBalance);
         });
         get("/rate", RateHandler::getClaimRate);
-
+        post("/setbonus", setBonusHandler::setBonus);
     }
 }

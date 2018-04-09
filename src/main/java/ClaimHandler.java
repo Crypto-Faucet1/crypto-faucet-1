@@ -106,8 +106,9 @@ public class ClaimHandler {
                         lastBonusDay = day;
                         dailyLastClaim = date.getTime();
                     }
-                } else if (dif2 >= 172800000) {
+                } else if (dif2 >= 172800000 || dif2 < -1) {
                     dailyBonus = 0;
+                    dailyLastClaim = date.getTime();
                 }
 
                 if (day == lastClaimDay) {
