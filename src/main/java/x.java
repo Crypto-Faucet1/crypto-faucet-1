@@ -1,7 +1,5 @@
 import spark.Spark;
 
-import java.util.Date;
-
 import static spark.Spark.get;
 import static spark.Spark.path;
 import static spark.Spark.post;

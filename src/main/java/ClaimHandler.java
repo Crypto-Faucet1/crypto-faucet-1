@@ -260,22 +260,23 @@ public class ClaimHandler {
         }
 
         if (claimsToday >= 10 && claimsToday <= 15) {
-            amount = amount * 0.86;
+            amount = amount * 0.80;
         } else if (claimsToday >= 16 && claimsToday <= 20) {
-            amount = amount * 0.79;
-        } else if (claimsToday >= 21 && claimsToday <= 26) {
             amount = amount * 0.70;
+        } else if (claimsToday >= 21 && claimsToday <= 26) {
+            amount = amount * 0.50;
         } else if (claimsToday >= 27 && claimsToday <= 35) {
-            amount = amount * 0.45;
+            amount = amount * 0.38;
         } else if (claimsToday >= 36 && claimsToday <= 45) {
-            amount = amount * 0.3;
-        } else if (claimsToday >= 46 && claimsToday <= 100) {
             amount = amount * 0.2;
+        } else if (claimsToday >= 46 && claimsToday <= 100) {
+            amount = amount * 0.1;
         }
 
         amount = amount * 0.89;
         amount = amount * 0.6;
         amount = amount * 0.75;
+        amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87
 
         if(claimsToday == 1){
             amount = amount * 3;

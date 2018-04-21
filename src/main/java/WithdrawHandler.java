@@ -21,7 +21,10 @@ public class WithdrawHandler {
         long lastClaim = 0;
         double dailyBonus = 0;
         long dailyLastClaim = 0;
+        int claimsToday = 0;
         int claims = 0;
+        int lastClaimDay = 0;
+        int lastBonusDay = 0;
         int num = -1;
         double totalPaid = 0.0;
         try {
@@ -41,6 +44,16 @@ public class WithdrawHandler {
                     dailyBonus = addr.getDouble("dailyBonus");
                     claims = addr.getInt("claims");
                     totalPaid = addr.getDouble("totalPaid");
+                    try {
+                        claimsToday = addr.getInt("claimsToday");
+                        lastClaimDay = addr.getInt("lastClaimDay");
+                    } catch (Exception ignored) {
+                    }
+                    try {
+                        lastBonusDay = addr.getInt("lastBonusDay");
+                    } catch (Exception ignored) {
+
+                    }
                     num = i;
                 }
             } catch (Exception e) {
@@ -59,6 +72,9 @@ public class WithdrawHandler {
         newItem.put("dailyBonus", dailyBonus);
         newItem.put("claims", claims);
         newItem.put("totalPaid", totalPaid);
+        newItem.put("claimsToday", claimsToday);
+        newItem.put("lastClaimDay", lastClaimDay);
+        newItem.put("lastBonusDay", lastBonusDay);
         jsonArray.put(newItem);
 
 
@@ -67,7 +83,7 @@ public class WithdrawHandler {
             Files.asCharSink(fileS, Charsets.UTF_8).write(jsonArray.toString());
         } catch (IOException e) {
             e.printStackTrace();
-            res = "failed write file";
+            res = "failed to write file";
         }
 
         return res;
