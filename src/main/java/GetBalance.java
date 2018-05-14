@@ -1,93 +1,60 @@
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class GetBalance {
-    private String res;
 
     String getAddressInfo(Request request, Response response){
         String address = request.queryParams("address");
-        String result = "[]";
+
+        double balance = 0.0;
+        double totalPaid = 0.0;
+        long lastClaim = 0;
+        double dailyBonus = 0;
+        long dailyLastClaim = 0;
+        int claims = 0;
+        int claimsToday = 0;
+        int lastClaimDay = 0;
+        int lastBonusDay = 0;
+        String queryCheck = "SELECT * from Addresses WHERE address = ?";
         try {
-            File file1 = new File("addresses.json");
-            result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception e) {
+            PreparedStatement ps = ClaimHandler.conn.prepareStatement(queryCheck);
+            ps.setString(1, address);
+            final ResultSet resultSet = ps.executeQuery();
+
+            if (resultSet.next()) {
+                balance = resultSet.getDouble(2);
+                lastClaim = resultSet.getTimestamp(3).getTime();
+                dailyLastClaim = resultSet.getTimestamp(4).getTime();
+                dailyBonus = resultSet.getDouble(5);
+                claims = resultSet.getInt(6);
+                totalPaid = resultSet.getDouble(7);
+                lastClaimDay = resultSet.getInt(8);
+                claimsToday = resultSet.getInt(9);
+                lastBonusDay = resultSet.getInt(10);
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        JSONObject jsonObject = new JSONObject();
-        try {
-            JSONArray jsonArray = new JSONArray(result);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject addr = jsonArray.getJSONObject(i);
-                try {
-                    if (addr.getString("address").equals(address)) {
-                        jsonObject = addr;
-                    }
-                } catch (Exception ignored) {
 
-                }
-            }
-        } catch (Exception ignored){}
-        return jsonObject.toString();
-    }
-
-    String getBalance(Request request, Response response){
-        String address = request.queryParams("address");
-        String result = "[]";
-        try {
-            File file1 = new File("addresses.json");
-            result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        double balance = 0;
-        try {
-            JSONArray jsonArray = new JSONArray(result);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject addr = jsonArray.getJSONObject(i);
-                try {
-                    if (addr.getString("address").equals(address)) {
-                        balance = addr.getDouble("balance");
-                    }
-                } catch (Exception ignored) {
-
-                }
-            }
-        } catch (Exception ignored){}
-        return round(balance, 5) + "";
-    }
-
-    String getPaid(Request request, Response response){
-        String address = request.queryParams("address");
-        String result = "[]";
-        try {
-            File file1 = new File("addresses.json");
-            result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        double balance = 0;
-        try {
-            JSONArray jsonArray = new JSONArray(result);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject addr = jsonArray.getJSONObject(i);
-                try {
-                    if (addr.getString("address").equals(address)) {
-                        balance = addr.getDouble("totalPaid");
-                    }
-                } catch (Exception ignored) {
-
-                }
-            }
-        } catch (Exception ignored){}
-        return balance + "";
+        JSONObject newItem = new JSONObject();
+        newItem.put("address", address);
+        newItem.put("balance", balance);
+        newItem.put("lastClaim", lastClaim);
+        newItem.put("dailyLastClaim", dailyLastClaim);
+        newItem.put("dailyBonus", dailyBonus);
+        newItem.put("claims", claims);
+        newItem.put("totalPaid", totalPaid);
+        newItem.put("lastClaimDay", lastClaimDay);
+        newItem.put("claimsToday", claimsToday);
+        newItem.put("lastBonusDay", lastBonusDay);
+        return newItem.toString();
     }
 
     public static double round(double value, int places) {

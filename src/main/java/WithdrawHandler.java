@@ -1,14 +1,14 @@
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class WithdrawHandler {
     String removeBalance(Request request, Response response) {
@@ -16,104 +16,54 @@ public class WithdrawHandler {
         String address = request.queryParams("address");
         double balanceRemove = Double.parseDouble(request.queryParams("balanceRemove"));
 
-        String result = "[]";
-        double balance = 0.0;
-        long lastClaim = 0;
-        double dailyBonus = 0;
-        long dailyLastClaim = 0;
-        int claimsToday = 0;
-        int claims = 0;
-        int lastClaimDay = 0;
-        int lastBonusDay = 0;
-        int num = -1;
-        double totalPaid = 0.0;
         try {
-            File file1 = new File("addresses.json");
-            result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception ignored) {
-        }
-        JSONArray jsonArray = new JSONArray(result);
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject addr = jsonArray.getJSONObject(i);
-            try {
-                if (addr.getString("address").equals(address)) {
-                    System.out.println("Balance: " + addr.getDouble("balance") + " Address found " + address);
-                    balance = addr.getDouble("balance");
-                    lastClaim = addr.getLong("lastClaim");
-                    dailyLastClaim = addr.getLong("dailyLastClaim");
-                    dailyBonus = addr.getDouble("dailyBonus");
-                    claims = addr.getInt("claims");
-                    totalPaid = addr.getDouble("totalPaid");
-                    try {
-                        claimsToday = addr.getInt("claimsToday");
-                        lastClaimDay = addr.getInt("lastClaimDay");
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        lastBonusDay = addr.getInt("lastBonusDay");
-                    } catch (Exception ignored) {
-
-                    }
-                    num = i;
-                }
-            } catch (Exception e) {
-                res = "Couldn't find address";
+            Statement stmt = ClaimHandler.conn.createStatement();
+            PreparedStatement ps = ClaimHandler.conn.prepareStatement("SELECT * from Addresses WHERE address = ?");
+            ps.setString(1, address);
+            ResultSet rs = ps.executeQuery();
+            double balance = 0;
+            double totalPaid = 0;
+            if (rs.next()) {
+                balance = rs.getDouble("balance");
+                totalPaid = rs.getDouble("totalPaid");
             }
-        }
-        if (num != -1) {
-            jsonArray.remove(num);
-        }
-        totalPaid = totalPaid + balanceRemove;
-        JSONObject newItem = new JSONObject();
-        newItem.put("address", address);
-        newItem.put("balance", balance - balanceRemove);
-        newItem.put("lastClaim", lastClaim);
-        newItem.put("dailyLastClaim", dailyLastClaim);
-        newItem.put("dailyBonus", dailyBonus);
-        newItem.put("claims", claims);
-        newItem.put("totalPaid", totalPaid);
-        newItem.put("claimsToday", claimsToday);
-        newItem.put("lastClaimDay", lastClaimDay);
-        newItem.put("lastBonusDay", lastBonusDay);
-        jsonArray.put(newItem);
-
-
-        try {
-            File fileS = new File("addresses.json");
-            Files.asCharSink(fileS, Charsets.UTF_8).write(jsonArray.toString());
-        } catch (IOException e) {
+            balance = balance - balanceRemove;
+            totalPaid = totalPaid + balanceRemove;
+            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE Addresses SET balance=" + balance + ", totalPaid=" + totalPaid + " WHERE address = ?");
+            ps2.setString(1, address);
+            ps2.executeUpdate();
+        } catch (SQLException e) {
             e.printStackTrace();
-            res = "failed to write file";
+            res = "SQLException Removing balance failed";
         }
 
         return res;
     }
 
     String getTop(Request request, Response response) {
-        String result = "[]";
         String command = "transfer ";
         double total = 0;
         JSONArray jsonArrayTop = new JSONArray();
+
         try {
-            File file1 = new File("addresses.json");
-            result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception e) {
+            Statement stmt = ClaimHandler.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * from Addresses WHERE balance > 0.1");
+            while (rs.next()) {
+                JSONObject item = new JSONObject();
+                double balance = rs.getDouble("balance");
+                item.put("address", rs.getString("address"));
+                item.put("balance", balance);
+                item.put("totalPaid", rs.getDouble("totalPaid"));
+                item.put("claimsToday", rs.getDouble("claimsToday"));
+                item.put("claims", rs.getDouble("claims"));
+                jsonArrayTop.put(item);
+                command = command + rs.getString("address") + " " + round(balance, 5) + " ";
+                total = total + balance;
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        double balance = 0;
-        try {
-            JSONArray jsonArray = new JSONArray(result);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject addr = jsonArray.getJSONObject(i);
-                balance = addr.getDouble("balance");
-                if (balance >= 0.1) {
-                    jsonArrayTop.put(addr);
-                    command = command + addr.getString("address") + " " + round(balance, 5) + " ";
-                    total = total + balance;
-                }
-            }
-        } catch (Exception ignored) {
-        }
+
         jsonArrayTop.put(command);
         jsonArrayTop.put(total);
         return jsonArrayTop.toString();

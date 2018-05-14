@@ -1,5 +1,3 @@
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import org.json.JSONArray;
@@ -7,17 +5,24 @@ import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
-import java.io.File;
-import java.io.IOException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 public class ClaimHandler {
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-dd-MM HH:mm:ss");
-    public static Double sumoRate = 0.00013826;
-    public static Double bitcoinRate = 0.0;
+    static Double sumoRate = 0.00013826;
+    static Double bitcoinRate = 0.0;
+    public static Connection conn;
+    private JSONArray jsonArrayIp = new JSONArray();
 
     ClaimHandler() {
+        try {
+            conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet?autoReconnect=true", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         Timer updateTimer = new Timer();
         updateTimer.scheduleAtFixedRate(new UpdateTask(), 0, 1800000);
     }
@@ -41,7 +46,6 @@ public class ClaimHandler {
         boolean comp = true;
 
         if (checkCaptcha(captcha, ip) && !address.equals("")) {
-            String result = "[]";
             double balance = 0.0;
             double totalPaid = 0.0;
             long lastClaim = 0;
@@ -51,44 +55,30 @@ public class ClaimHandler {
             int claimsToday = 0;
             int lastClaimDay = 0;
             int lastBonusDay = 0;
-            int num = -1;
+            boolean addressExists = false;
+            String queryCheck = "SELECT * from Addresses WHERE address = ?";
             try {
-                File file1 = new File("addresses.json");
-                result = Files.asCharSource(file1, Charsets.UTF_8).read();
-            } catch (Exception e) {
-                System.out.println(getTime() + " Failed to read addresses file.");
-            }
-            JSONArray jsonArray = new JSONArray(result);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject addr = jsonArray.getJSONObject(i);
-                if (addr.getString("address").equals(address)) {
-                    try {
+                PreparedStatement ps = conn.prepareStatement(queryCheck);
+                ps.setString(1, address);
+                final ResultSet resultSet = ps.executeQuery();
 
-                        balance = addr.getDouble("balance");
-                        lastClaim = addr.getLong("lastClaim");
-                        dailyBonus = addr.getDouble("dailyBonus");
-                        dailyLastClaim = addr.getLong("dailyLastClaim");
-                        claims = addr.getInt("claims");
-                        num = i;
-                    } catch (Exception e) {
-                        System.out.println(getTime() + " New address added");
-                    }
-                    try {
-                        totalPaid = addr.getDouble("totalPaid");
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        claimsToday = addr.getInt("claimsToday");
-                        lastClaimDay = addr.getInt("lastClaimDay");
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        lastBonusDay = addr.getInt("lastBonusDay");
-                    } catch (Exception ignored) {
-
-                    }
+                if (resultSet.next()) {
+                    balance = resultSet.getDouble(2);
+                    lastClaim = resultSet.getTimestamp(3).getTime();
+                    dailyLastClaim = resultSet.getTimestamp(4).getTime();
+                    dailyBonus = resultSet.getDouble(5);
+                    claims = resultSet.getInt(6);
+                    totalPaid = resultSet.getDouble(7);
+                    lastClaimDay = resultSet.getInt(8);
+                    claimsToday = resultSet.getInt(9);
+                    lastBonusDay = resultSet.getInt(10);
+                    addressExists = true;
+                } else {
                 }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+
             Calendar cal = Calendar.getInstance();
             int day = cal.get(Calendar.DAY_OF_MONTH);
 
@@ -96,7 +86,7 @@ public class ClaimHandler {
             Date date = new Date();
             long dif = date.getTime() - lastClaim;
             if (dif >= 300000) {
-                if(dailyLastClaim == 0){
+                if (dailyLastClaim == 0) {
                     dailyLastClaim = date.getTime();
                 }
                 long dif2 = date.getTime() - dailyLastClaim;
@@ -125,31 +115,43 @@ public class ClaimHandler {
                 balance = balance + claimAmount * keerDing;
                 claims = claims + 1;
                 lastClaim = date.getTime();
-                if (num != -1) {
-                    jsonArray.remove(num);
+
+                if (addressExists) {
+                    java.util.Date dt = new java.util.Date(lastClaim);
+                    java.util.Date dt2 = new java.util.Date(dailyLastClaim);
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String currentTime = sdf.format(dt);
+                    String currentTime2 = sdf.format(dt2);
+
+                    String insert = "UPDATE Addresses SET balance='" + balance + "', lastClaim='" + currentTime
+                            + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
+                            "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "' WHERE address=?";
+                    try {
+                        PreparedStatement ps = conn.prepareStatement(insert);
+                        ps.setString(1, address);
+                        ps.executeUpdate();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    java.util.Date dt = new java.util.Date(lastClaim);
+                    java.util.Date dt2 = new java.util.Date(dailyLastClaim);
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String currentTime = sdf.format(dt);
+                    String currentTime2 = sdf.format(dt2);
+
+                    String insert = "INSERT INTO Addresses VALUES (?, '" + balance + "', '" + currentTime
+                            + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday + "', '" + lastBonusDay + "')";
+                    try {
+                        PreparedStatement ps = conn.prepareStatement(insert);
+                        ps.setString(1, address);
+                        ps.executeQuery();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                 }
-
-                JSONObject newItem = new JSONObject();
-                newItem.put("address", address);
-                newItem.put("balance", balance);
-                newItem.put("lastClaim", lastClaim);
-                newItem.put("dailyLastClaim", dailyLastClaim);
-                newItem.put("dailyBonus", dailyBonus);
-                newItem.put("claims", claims);
-                newItem.put("totalPaid", totalPaid);
-                newItem.put("lastClaimDay", lastClaimDay);
-                newItem.put("claimsToday", claimsToday);
-                newItem.put("lastBonusDay", lastBonusDay);
-                jsonArray.put(newItem);
-            }
-
-            try {
-                File fileS = new File("addresses.json");
-                Files.asCharSink(fileS, Charsets.UTF_8).write(jsonArray.toString());
-                System.out.println(getTime() + " Faucet claim successful balance: " + WithdrawHandler.round(balance, 5) + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println(getTime() + " Failed to write addresses file.");
+                System.out.println(getTime() + "Faucet claim successful balance: " + WithdrawHandler.round(balance, 5) + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
+            } else {
                 comp = false;
             }
         } else {
@@ -182,53 +184,34 @@ public class ClaimHandler {
         }
 
         ///Double ip check
-        String result = "[]";
-        try {
-            File file1 = new File("ip.json");
-            result = Files.asCharSource(file1, Charsets.UTF_8).read();
-        } catch (Exception e) {
-            System.out.println(getTime() + " Failed to read ip file.");
-        }
-        int num = -1;
-        long lastClaim = 0;
-        JSONArray jsonArray = new JSONArray(result);
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject addr = jsonArray.getJSONObject(i);
-            try {
-                if (addr.getString("ip").equals(ip)) {
-                    lastClaim = addr.getLong("lastClaim");
-                    num = i;
+        if (!comp) {
+            int num = -1;
+            long lastClaim = 0;
+            for (int i = 0; i < jsonArrayIp.length(); i++) {
+                JSONObject addr = jsonArrayIp.getJSONObject(i);
+                try {
+                    if (addr.getString("ip").equals(ip)) {
+                        lastClaim = addr.getLong("lastClaim");
+                        num = i;
+                    }
+                } catch (Exception ignored) {
                 }
-            } catch (Exception e) {
-                //e.printStackTrace();
-                //System.out.println(getTime() + " New ip added " + ip);
+            }
+            Date date = new Date();
+            long dif = date.getTime() - lastClaim;
+            if (dif >= 300000) {
+                if (num != -1) {
+                    jsonArrayIp.remove(num);
+                }
+                lastClaim = date.getTime();
+                JSONObject newItem = new JSONObject();
+                newItem.put("ip", ip);
+                newItem.put("lastClaim", lastClaim);
+                jsonArrayIp.put(newItem);
+            } else {
+                System.out.println(getTime() + "Ip double claim " + ip);
             }
         }
-        Date date = new Date();
-        long dif = date.getTime() - lastClaim;
-        if (dif >= 300000) {
-            if (num != -1) {
-                jsonArray.remove(num);
-            }
-            lastClaim = date.getTime();
-            JSONObject newItem = new JSONObject();
-            newItem.put("ip", ip);
-            newItem.put("lastClaim", lastClaim);
-            jsonArray.put(newItem);
-        } else {
-            comp = false;
-            System.out.println(getTime() + "Ip double claim " + ip);
-        }
-
-        try {
-            File fileS = new File("ip.json");
-            Files.asCharSink(fileS, Charsets.UTF_8).write(jsonArray.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println(getTime() + " Failed to write ip file.");
-            comp = false;
-        }
-
         return comp;
     }
 
@@ -278,7 +261,7 @@ public class ClaimHandler {
         amount = amount * 0.75;
         amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87
 
-        if(claimsToday == 1){
+        if (claimsToday == 1) {
             amount = amount * 3;
         }
 
