@@ -61,6 +61,7 @@ public class ClaimHandler {
                 PreparedStatement ps = conn.prepareStatement(queryCheck);
                 ps.setString(1, address);
                 final ResultSet resultSet = ps.executeQuery();
+                ps.close();
 
                 if (resultSet.next()) {
                     balance = resultSet.getDouble(2);
@@ -130,6 +131,7 @@ public class ClaimHandler {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
                         ps.executeUpdate();
+                        ps.close();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
@@ -146,6 +148,7 @@ public class ClaimHandler {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
                         ps.executeQuery();
+                        ps.close();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }

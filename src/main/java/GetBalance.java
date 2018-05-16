@@ -27,6 +27,7 @@ public class GetBalance {
             PreparedStatement ps = ClaimHandler.conn.prepareStatement(queryCheck);
             ps.setString(1, address);
             final ResultSet resultSet = ps.executeQuery();
+            ps.close();
 
             if (resultSet.next()) {
                 balance = resultSet.getDouble(2);

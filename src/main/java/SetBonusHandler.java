@@ -15,6 +15,7 @@ public class SetBonusHandler {
             PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE Addresses SET dailyBonus=" + bonus + " WHERE address = ?");
             ps2.setString(1, address);
             ps2.executeUpdate();
+            ps2.close();
         } catch (SQLException e) {
             e.printStackTrace();
             res = "Error";
