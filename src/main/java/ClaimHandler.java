@@ -19,12 +19,14 @@ public class ClaimHandler {
 
     ClaimHandler() {
         try {
-            conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet?autoReconnect=true", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+            conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
         } catch (SQLException e) {
             e.printStackTrace();
         }
         Timer updateTimer = new Timer();
         updateTimer.scheduleAtFixedRate(new UpdateTask(), 0, 1800000);
+        Timer updateTimer2 = new Timer();
+        updateTimer2.scheduleAtFixedRate(new UpdateTask2(), 0, 6000);
     }
 
     private class UpdateTask extends TimerTask {
@@ -32,6 +34,20 @@ public class ClaimHandler {
         public void run() {
             updateRate();
             updateBitcoinRate();
+        }
+    }
+
+    private class UpdateTask2 extends TimerTask {
+        @Override
+        public void run() {
+            try {
+                if(!conn.isValid(2500)){
+                    conn.close();
+                    conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
