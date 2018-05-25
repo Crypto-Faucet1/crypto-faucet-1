@@ -13,7 +13,6 @@ import java.util.Date;
 public class ClaimHandler {
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-dd-MM HH:mm:ss");
     static Double sumoRate = 0.00013826;
-    static Double bitcoinRate = 0.0;
     public static Connection conn;
     private JSONArray jsonArrayIp = new JSONArray();
 
@@ -33,7 +32,6 @@ public class ClaimHandler {
         @Override
         public void run() {
             updateRate();
-            updateBitcoinRate();
         }
     }
 
@@ -243,34 +241,23 @@ public class ClaimHandler {
         } else if (value <= 90) {
             amount = 0.00000015 / sumoRate;
         } else if (value <= 94) {
-            amount = 0.00000280 / sumoRate;
+            amount = 0.00000270 / sumoRate;
         } else if (value <= 97) {
-            amount = 0.00000638 / sumoRate;
+            amount = 0.00000600 / sumoRate;
         }
-        if (bitcoinRate <= 11000) {
-            amount = amount * 0.7;
-        } else if (bitcoinRate <= 13000) {
-            amount = amount * 0.81;
-        } else if (bitcoinRate <= 14000) {
-            amount = amount * 0.85;
-        } else if (bitcoinRate <= 15000) {
-            amount = amount * 0.9;
-        } else if (bitcoinRate <= 16000) {
 
-        } else if (bitcoinRate <= 20000) {
-            amount = amount * 1.05;
-        }
+        amount = amount * 0.7;
 
         if (claimsToday >= 10 && claimsToday <= 15) {
             amount = amount * 0.80;
         } else if (claimsToday >= 16 && claimsToday <= 20) {
-            amount = amount * 0.70;
+            amount = amount * 0.65;
         } else if (claimsToday >= 21 && claimsToday <= 26) {
-            amount = amount * 0.50;
+            amount = amount * 0.48;
         } else if (claimsToday >= 27 && claimsToday <= 35) {
-            amount = amount * 0.38;
+            amount = amount * 0.32;
         } else if (claimsToday >= 36 && claimsToday <= 45) {
-            amount = amount * 0.2;
+            amount = amount * 0.18;
         } else if (claimsToday >= 46 && claimsToday <= 100) {
             amount = amount * 0.1;
         }
@@ -278,7 +265,8 @@ public class ClaimHandler {
         amount = amount * 0.89;
         amount = amount * 0.6;
         amount = amount * 0.75;
-        amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87
+        amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
+        amount = amount * 0.79; //25-05-2018; -0,94 totaal; 0,858%
 
         if (claimsToday == 1) {
             amount = amount * 3;
@@ -294,7 +282,7 @@ public class ClaimHandler {
     private void updateRate() {
         OkHttpClient client = new OkHttpClient();
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://api.coinmarketcap.com/v1/ticker/sumokoin").newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://api.coinmarketcap.com/v2/ticker/1694/?convert=BTC").newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -302,32 +290,12 @@ public class ClaimHandler {
                 .build();
         try {
             okhttp3.Response response = client.newCall(request).execute();
-            JSONArray jsonArray = new JSONArray(response.body().string());
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            sumoRate = jsonObject.getDouble("price_btc");
+            JSONObject jsonObject = new JSONObject(response.body().string());
+            JSONObject jsonObjectBtc = jsonObject.getJSONObject("data").getJSONObject("quotes").getJSONObject("BTC");
+            sumoRate = jsonObjectBtc.getDouble("price");
         } catch (Exception e) {
             e.printStackTrace();
         }
         System.out.println(getTime() + "Sumo rate updated " + sumoRate);
-    }
-
-    private void updateBitcoinRate() {
-        OkHttpClient client = new OkHttpClient();
-
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://api.coinmarketcap.com/v1/ticker/bitcoin").newBuilder();
-        String url = urlBuilder.build().toString();
-
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .build();
-        try {
-            okhttp3.Response response = client.newCall(request).execute();
-            JSONArray jsonArray = new JSONArray(response.body().string());
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            bitcoinRate = jsonObject.getDouble("price_usd");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println(getTime() + "Bitcoin rate updated " + bitcoinRate);
     }
 }

@@ -106,5 +106,7 @@ gradle-app.setting
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
 
+addresses.json
+ip.json
 
 # End of https://www.gitignore.io/api/java,gradle,intellij
