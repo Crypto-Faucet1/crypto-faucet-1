@@ -1,5 +1,3 @@
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Spark;
@@ -48,8 +46,8 @@ public class x {
             int num = -1;
             double totalPaid = 0.0;
             try {
-                File file1 = new File("addresses.json");
-                result = Files.asCharSource(file1, Charsets.UTF_8).read();
+                //File file1 = new File("addresses.json");
+                //result = Files.asCharSource(file1, Charsets.UTF_8).read();
             } catch (Exception ignored) {
             }
             JSONArray jsonArray = new JSONArray(result);

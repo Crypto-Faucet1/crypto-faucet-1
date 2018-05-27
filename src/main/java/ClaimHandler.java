@@ -266,7 +266,7 @@ public class ClaimHandler {
         amount = amount * 0.6;
         amount = amount * 0.75;
         amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
-        amount = amount * 0.79; //25-05-2018; -0,94 totaal; 0,858%
+        amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
 
         if (claimsToday == 1) {
             amount = amount * 3;
