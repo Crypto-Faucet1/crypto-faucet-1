@@ -43,10 +43,11 @@ public class ClaimHandler {
         String captcha = request.queryParams("captcha");
         String address = request.queryParams("address").replaceAll("\\s+", "");
         String ip = request.queryParams("ip");
-        return claim(address, captcha, ip) + "";
+        String currency = request.queryParams("currency");
+        return claim(address, captcha, ip, currency) + "";
     }
 
-    private boolean claim(String address, String captcha, String ip) {
+    private boolean claim(String address, String captcha, String ip, String currency) {
         boolean comp = true;
 
         if (checkCaptcha(captcha, ip) && !address.equals("")) {
@@ -60,10 +61,12 @@ public class ClaimHandler {
             int lastClaimDay = 0;
             int lastBonusDay = 0;
             boolean addressExists = false;
-            String queryCheck = "SELECT * from Addresses WHERE address = ?";
+
+            String queryCheck = "SELECT * from ? WHERE address = ?";
             try {
                 PreparedStatement ps = conn.prepareStatement(queryCheck);
-                ps.setString(1, address);
+                ps.setString(1, currency);
+                ps.setString(2, address);
                 final ResultSet resultSet = ps.executeQuery();
                 ps.close();
 
@@ -115,7 +118,7 @@ public class ClaimHandler {
                 }
 
                 double keerDing = 1 + dailyBonus;
-                claimAmount = Prices.getClaimAmount(claimsToday);
+                claimAmount = Prices.getClaimAmount(claimsToday, currency);
 
                 balance = balance + claimAmount * keerDing;
                 claims = claims + 1;
@@ -128,12 +131,13 @@ public class ClaimHandler {
                     String currentTime = sdf.format(dt);
                     String currentTime2 = sdf.format(dt2);
 
-                    String insert = "UPDATE Addresses SET balance='" + balance + "', lastClaim='" + currentTime
+                    String insert = "UPDATE ? SET balance='" + balance + "', lastClaim='" + currentTime
                             + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
                             "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "' WHERE address=?";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
-                        ps.setString(1, address);
+                        ps.setString(1, currency);
+                        ps.setString(2, address);
                         ps.executeUpdate();
                         ps.close();
                     } catch (SQLException e) {
@@ -146,11 +150,12 @@ public class ClaimHandler {
                     String currentTime = sdf.format(dt);
                     String currentTime2 = sdf.format(dt2);
 
-                    String insert = "INSERT INTO Addresses VALUES (?, '" + balance + "', '" + currentTime
+                    String insert = "INSERT INTO ? VALUES (?, '" + balance + "', '" + currentTime
                             + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday + "', '" + lastBonusDay + "')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
-                        ps.setString(1, address);
+                        ps.setString(1, currency);
+                        ps.setString(2, address);
                         ps.executeQuery();
                         ps.close();
                     } catch (SQLException e) {
