@@ -12,6 +12,7 @@ public class GetBalance {
 
     String getAddressInfo(Request request, Response response){
         String address = request.queryParams("address");
+        String currency = request.queryParams("currency");
 
         double balance = 0.0;
         double totalPaid = 0.0;
@@ -22,7 +23,13 @@ public class GetBalance {
         int claimsToday = 0;
         int lastClaimDay = 0;
         int lastBonusDay = 0;
-        String queryCheck = "SELECT * from Addresses WHERE address = ?";
+        String table = "";
+        if (currency.equals("sumo")) {
+            table = "sumo";
+        } else if (currency.equals("ryo")) {
+            table = "ryo";
+        }
+        String queryCheck = "SELECT * from " + table +" WHERE address = ?";
         try {
             PreparedStatement ps = ClaimHandler.conn.prepareStatement(queryCheck);
             ps.setString(1, address);

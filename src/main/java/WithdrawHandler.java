@@ -15,10 +15,16 @@ public class WithdrawHandler {
         String res = "done";
         String address = request.queryParams("address");
         double balanceRemove = Double.parseDouble(request.queryParams("balanceRemove"));
-
+        String currency = request.queryParams("currency");
+        String table = "";
+        if (currency.equals("sumo")) {
+            table = "sumo";
+        } else if (currency.equals("ryo")) {
+            table = "ryo";
+        }
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
-            PreparedStatement ps = ClaimHandler.conn.prepareStatement("SELECT * from Addresses WHERE address = ?");
+            PreparedStatement ps = ClaimHandler.conn.prepareStatement("SELECT * from " + table + " WHERE address = ?");
             ps.setString(1, address);
             ResultSet rs = ps.executeQuery();
             double balance = 0;
@@ -29,7 +35,7 @@ public class WithdrawHandler {
             }
             balance = balance - balanceRemove;
             totalPaid = totalPaid + balanceRemove;
-            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE Addresses SET balance=" + balance + ", totalPaid=" + totalPaid + " WHERE address = ?");
+            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE " + table + " SET balance=" + balance + ", totalPaid=" + totalPaid + " WHERE address = ?");
             ps2.setString(1, address);
             ps2.executeUpdate();
         } catch (SQLException e) {

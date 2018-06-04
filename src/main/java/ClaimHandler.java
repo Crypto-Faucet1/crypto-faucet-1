@@ -13,7 +13,8 @@ import java.util.Date;
 public class ClaimHandler {
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-dd-MM HH:mm:ss");
     public static Connection conn;
-    private JSONArray jsonArrayIp = new JSONArray();
+    private JSONArray jsonArrayIpSumo = new JSONArray();
+    private JSONArray jsonArrayIpRyo = new JSONArray();
 
     ClaimHandler() {
         try {
@@ -25,11 +26,12 @@ public class ClaimHandler {
         Timer updateTimer2 = new Timer();
         updateTimer2.scheduleAtFixedRate(new UpdateTask2(), 0, 6000);
     }
+
     private class UpdateTask2 extends TimerTask {
         @Override
         public void run() {
             try {
-                if(!conn.isValid(2500)){
+                if (!conn.isValid(2500)) {
                     conn.close();
                     conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
                 }
@@ -48,9 +50,15 @@ public class ClaimHandler {
     }
 
     private boolean claim(String address, String captcha, String ip, String currency) {
+        String table = "";
+        if (currency.equals("sumo")) {
+            table = "sumo";
+        } else if (currency.equals("ryo")) {
+            table = "ryo";
+        }
         boolean comp = true;
 
-        if (checkCaptcha(captcha, ip) && !address.equals("")) {
+        if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
             double balance = 0.0;
             double totalPaid = 0.0;
             long lastClaim = 0;
@@ -62,11 +70,10 @@ public class ClaimHandler {
             int lastBonusDay = 0;
             boolean addressExists = false;
 
-            String queryCheck = "SELECT * from ? WHERE address = ?";
+            String queryCheck = "SELECT * from " + table + " WHERE address = ?";
             try {
                 PreparedStatement ps = conn.prepareStatement(queryCheck);
-                ps.setString(1, currency);
-                ps.setString(2, address);
+                ps.setString(1, address);
                 final ResultSet resultSet = ps.executeQuery();
                 ps.close();
 
@@ -131,13 +138,12 @@ public class ClaimHandler {
                     String currentTime = sdf.format(dt);
                     String currentTime2 = sdf.format(dt2);
 
-                    String insert = "UPDATE ? SET balance='" + balance + "', lastClaim='" + currentTime
+                    String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
                             + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
                             "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "' WHERE address=?";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
-                        ps.setString(1, currency);
-                        ps.setString(2, address);
+                        ps.setString(1, address);
                         ps.executeUpdate();
                         ps.close();
                     } catch (SQLException e) {
@@ -150,19 +156,18 @@ public class ClaimHandler {
                     String currentTime = sdf.format(dt);
                     String currentTime2 = sdf.format(dt2);
 
-                    String insert = "INSERT INTO ? VALUES (?, '" + balance + "', '" + currentTime
+                    String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
                             + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday + "', '" + lastBonusDay + "')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
-                        ps.setString(1, currency);
-                        ps.setString(2, address);
+                        ps.setString(1, address);
                         ps.executeQuery();
                         ps.close();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
                 }
-                System.out.println(getTime() + "Faucet claim successful balance: " + WithdrawHandler.round(balance, 5) + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
+                System.out.println(getTime() + "Faucet claim successful balance: " + WithdrawHandler.round(balance, 5) + currency + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
             } else {
                 comp = false;
             }
@@ -173,7 +178,7 @@ public class ClaimHandler {
         return comp;
     }
 
-    private boolean checkCaptcha(String captcha, String ip) {
+    private boolean checkCaptcha(String captcha, String ip, String currency) {
         boolean comp = true;
         ///recaptcha
         OkHttpClient client = new OkHttpClient();
@@ -197,6 +202,14 @@ public class ClaimHandler {
 
         ///Double ip check
         if (!comp) {
+            JSONArray jsonArrayIp = new JSONArray();
+
+            if (currency.equals("sumo")) {
+                jsonArrayIp = jsonArrayIpSumo;
+            } else if (currency.equals("ryo")) {
+                jsonArrayIp = jsonArrayIpRyo;
+            }
+
             int num = -1;
             long lastClaim = 0;
             for (int i = 0; i < jsonArrayIp.length(); i++) {
@@ -222,6 +235,11 @@ public class ClaimHandler {
                 jsonArrayIp.put(newItem);
             } else {
                 System.out.println(getTime() + "Ip double claim " + ip);
+            }
+            if (currency.equals("sumo")) {
+                jsonArrayIpSumo = jsonArrayIp;
+            } else if (currency.equals("ryo")) {
+                jsonArrayIpRyo = jsonArrayIp;
             }
         }
         return comp;

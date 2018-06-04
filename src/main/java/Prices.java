@@ -109,7 +109,44 @@ public class Prices {
                 amount = amount * 3;
             }
         } else if (currency.equals("ryo")){
+            Random rand = new Random();
+            int value = rand.nextInt(100) + 1;
+            amount = 0.00000020 / Prices.ryoRate;
+            if (value <= 50) {
+                amount = 0.00000006 / Prices.ryoRate;
+            } else if (value <= 90) {
+                amount = 0.00000015 / Prices.ryoRate;
+            } else if (value <= 94) {
+                amount = 0.00000270 / Prices.ryoRate;
+            } else if (value <= 97) {
+                amount = 0.00000600 / Prices.ryoRate;
+            }
 
+            amount = amount * 0.7;
+
+            if (claimsToday >= 10 && claimsToday <= 15) {
+                amount = amount * 0.80;
+            } else if (claimsToday >= 16 && claimsToday <= 20) {
+                amount = amount * 0.65;
+            } else if (claimsToday >= 21 && claimsToday <= 26) {
+                amount = amount * 0.48;
+            } else if (claimsToday >= 27 && claimsToday <= 35) {
+                amount = amount * 0.32;
+            } else if (claimsToday >= 36 && claimsToday <= 45) {
+                amount = amount * 0.18;
+            } else if (claimsToday >= 46 && claimsToday <= 100) {
+                amount = amount * 0.1;
+            }
+
+            amount = amount * 0.89;
+            amount = amount * 0.6;
+            amount = amount * 0.75;
+            amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
+            amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
+
+            if (claimsToday == 1) {
+                amount = amount * 3;
+            }
         }
 
         return WithdrawHandler.round(amount, 5);
