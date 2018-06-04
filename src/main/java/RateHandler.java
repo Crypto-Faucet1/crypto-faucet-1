@@ -20,10 +20,10 @@ public class RateHandler {
             bitKeer = bitKeer * 1.05;
         }*/
 
-        claimRate = claimRate + 0.00000006 / ClaimHandler.sumoRate * bitKeer * 0.5 + ";";
-        claimRate = claimRate + 0.00000015 / ClaimHandler.sumoRate * bitKeer * 0.5 + ";";
-        claimRate = claimRate + 0.00000280 / ClaimHandler.sumoRate * bitKeer * 0.5 + ";";
-        claimRate = claimRate + 0.00000638 / ClaimHandler.sumoRate * bitKeer * 0.5;
+        claimRate = claimRate + 0.00000006 / Prices.sumoRate * bitKeer * 0.5 + ";";
+        claimRate = claimRate + 0.00000015 / Prices.sumoRate * bitKeer * 0.5 + ";";
+        claimRate = claimRate + 0.00000280 / Prices.sumoRate * bitKeer * 0.5 + ";";
+        claimRate = claimRate + 0.00000638 / Prices.sumoRate * bitKeer * 0.5;
 
         return claimRate;
     }

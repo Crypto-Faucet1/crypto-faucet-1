@@ -18,6 +18,7 @@ public class x {
         WithdrawHandler withdrawHandler = new WithdrawHandler();
         RateHandler rateHandler = new RateHandler();
         SetBonusHandler setBonusHandler = new SetBonusHandler();
+        new Prices();
 
         post("/claim", claim::claimSumo);
         get("/addressInfo", getBalance::getAddressInfo);
