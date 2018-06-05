@@ -88,7 +88,7 @@ public class Prices {
             if (claimsToday >= 10 && claimsToday <= 15) {
                 amount = amount * 0.80;
             } else if (claimsToday >= 16 && claimsToday <= 20) {
-                amount = amount * 0.65;
+                amount = amount * 0.60;
             } else if (claimsToday >= 21 && claimsToday <= 26) {
                 amount = amount * 0.48;
             } else if (claimsToday >= 27 && claimsToday <= 35) {
@@ -104,6 +104,7 @@ public class Prices {
             amount = amount * 0.75;
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
+            amount = amount * 0.95;
 
             if (claimsToday == 1) {
                 amount = amount * 3;
@@ -127,7 +128,7 @@ public class Prices {
             if (claimsToday >= 10 && claimsToday <= 15) {
                 amount = amount * 0.80;
             } else if (claimsToday >= 16 && claimsToday <= 20) {
-                amount = amount * 0.65;
+                amount = amount * 0.60;
             } else if (claimsToday >= 21 && claimsToday <= 26) {
                 amount = amount * 0.48;
             } else if (claimsToday >= 27 && claimsToday <= 35) {
@@ -143,6 +144,7 @@ public class Prices {
             amount = amount * 0.75;
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
+            amount = amount * 0.95;
 
             if (claimsToday == 1) {
                 amount = amount * 3;

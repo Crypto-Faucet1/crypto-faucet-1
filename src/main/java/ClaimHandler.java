@@ -49,13 +49,18 @@ public class ClaimHandler {
         return claim(address, captcha, ip, currency) + "";
     }
 
-    private boolean claim(String address, String captcha, String ip, String currency) {
+    static String getTable(String currency){
         String table = "";
         if (currency.equals("sumo")) {
             table = "sumo";
         } else if (currency.equals("ryo")) {
             table = "ryo";
         }
+        return table;
+    }
+
+    private boolean claim(String address, String captcha, String ip, String currency) {
+        String table = getTable(currency);
         boolean comp = true;
 
         if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {

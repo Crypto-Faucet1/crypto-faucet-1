@@ -8,11 +8,13 @@ public class SetBonusHandler {
     String setBonus(Request request, Response response) {
         String res = "done";
         String address = request.queryParams("address");
+        String currency = request.queryParams("currency");
+        String table = ClaimHandler.getTable(currency);
         double bonus = Double.parseDouble(request.queryParams("bonus"));
 
 
         try {
-            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE Addresses SET dailyBonus=" + bonus + " WHERE address = ?");
+            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE " + table + " SET dailyBonus=" + bonus + " WHERE address = ?");
             ps2.setString(1, address);
             ps2.executeUpdate();
             ps2.close();

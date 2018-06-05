@@ -16,12 +16,7 @@ public class WithdrawHandler {
         String address = request.queryParams("address");
         double balanceRemove = Double.parseDouble(request.queryParams("balanceRemove"));
         String currency = request.queryParams("currency");
-        String table = "";
-        if (currency.equals("sumo")) {
-            table = "sumo";
-        } else if (currency.equals("ryo")) {
-            table = "ryo";
-        }
+        String table = ClaimHandler.getTable(currency);
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
             PreparedStatement ps = ClaimHandler.conn.prepareStatement("SELECT * from " + table + " WHERE address = ?");
@@ -50,10 +45,11 @@ public class WithdrawHandler {
         String command = "transfer ";
         double total = 0;
         JSONArray jsonArrayTop = new JSONArray();
-
+        String currency = request.queryParams("currency");
+        String table = ClaimHandler.getTable(currency);
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from Addresses WHERE balance > 0.1");
+            ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > 0.1");
             while (rs.next()) {
                 JSONObject item = new JSONObject();
                 double balance = rs.getDouble("balance");
