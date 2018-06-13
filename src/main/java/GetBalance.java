@@ -23,6 +23,7 @@ public class GetBalance {
         int claimsToday = 0;
         int lastClaimDay = 0;
         int lastBonusDay = 0;
+        int payoutDayReached = 0;
         String table = ClaimHandler.getTable(currency);
         String queryCheck = "SELECT * from " + table +" WHERE address = ?";
         try {
@@ -41,6 +42,7 @@ public class GetBalance {
                 lastClaimDay = resultSet.getInt(8);
                 claimsToday = resultSet.getInt(9);
                 lastBonusDay = resultSet.getInt(10);
+                payoutDayReached = resultSet.getInt(11);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,6 +59,7 @@ public class GetBalance {
         newItem.put("lastClaimDay", lastClaimDay);
         newItem.put("claimsToday", claimsToday);
         newItem.put("lastBonusDay", lastBonusDay);
+        newItem.put("payoutDayReached", payoutDayReached);
         return newItem.toString();
     }
 

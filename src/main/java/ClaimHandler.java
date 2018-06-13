@@ -15,6 +15,7 @@ public class ClaimHandler {
     public static Connection conn;
     private JSONArray jsonArrayIpSumo = new JSONArray();
     private JSONArray jsonArrayIpRyo = new JSONArray();
+    private double payoutAmount = 0.1;
 
     ClaimHandler() {
         try {
@@ -73,6 +74,7 @@ public class ClaimHandler {
             int claimsToday = 0;
             int lastClaimDay = 0;
             int lastBonusDay = 0;
+            int payoutDayReached = 0;
             boolean addressExists = false;
 
             String queryCheck = "SELECT * from " + table + " WHERE address = ?";
@@ -92,6 +94,7 @@ public class ClaimHandler {
                     lastClaimDay = resultSet.getInt(8);
                     claimsToday = resultSet.getInt(9);
                     lastBonusDay = resultSet.getInt(10);
+                    payoutDayReached = resultSet.getInt(11);
                     addressExists = true;
                 } else {
                 }
@@ -103,6 +106,7 @@ public class ClaimHandler {
             int day = cal.get(Calendar.DAY_OF_MONTH);
 
             double claimAmount = 0;
+            boolean payout = false;
             Date date = new Date();
             long dif = date.getTime() - lastClaim;
             if (dif >= 300000) {
@@ -130,12 +134,17 @@ public class ClaimHandler {
                 }
 
                 double keerDing = 1 + dailyBonus;
+                if(balance > payoutAmount){
+                    payout = true;
+                }
                 claimAmount = Prices.getClaimAmount(claimsToday, currency);
 
                 balance = balance + claimAmount * keerDing;
                 claims = claims + 1;
                 lastClaim = date.getTime();
-
+                if (!payout && balance > payoutAmount){
+                    payoutDayReached = day;
+                }
                 if (addressExists) {
                     java.util.Date dt = new java.util.Date(lastClaim);
                     java.util.Date dt2 = new java.util.Date(dailyLastClaim);
@@ -145,7 +154,7 @@ public class ClaimHandler {
 
                     String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
                             + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
-                            "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "' WHERE address=?";
+                            "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='" + payoutDayReached +"' WHERE address=?";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
@@ -162,7 +171,8 @@ public class ClaimHandler {
                     String currentTime2 = sdf.format(dt2);
 
                     String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
-                            + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday + "', '" + lastBonusDay + "')";
+                            + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
+                            + "', '" + lastBonusDay + "', '" + payoutDayReached +"')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
