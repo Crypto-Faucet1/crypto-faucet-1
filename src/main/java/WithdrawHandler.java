@@ -49,7 +49,7 @@ public class WithdrawHandler {
         String table = ClaimHandler.getTable(currency);
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > 0.1");
+            ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > " + getWithdrawLimit(currency));
             while (rs.next()) {
                 JSONObject item = new JSONObject();
                 double balance = rs.getDouble("balance");
@@ -78,5 +78,17 @@ public class WithdrawHandler {
         BigDecimal bd = new BigDecimal(value);
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
+    }
+
+    public static double getWithdrawLimit(String currency){
+        double limit = 0;
+        if (currency.equals("sumo")) {
+            limit = 0.1;
+        } else if (currency.equals("ryo")) {
+            limit = 0.1;
+        } else if (currency.equals("intense")){
+            limit = 10;
+        }
+        return limit;
     }
 }

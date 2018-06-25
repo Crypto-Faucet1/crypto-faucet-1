@@ -15,7 +15,7 @@ public class ClaimHandler {
     public static Connection conn;
     private JSONArray jsonArrayIpSumo = new JSONArray();
     private JSONArray jsonArrayIpRyo = new JSONArray();
-    private double payoutAmount = 0.1;
+    private JSONArray jsonArrayIpIntense = new JSONArray();
 
     ClaimHandler() {
         try {
@@ -56,6 +56,8 @@ public class ClaimHandler {
             table = "sumo";
         } else if (currency.equals("ryo")) {
             table = "ryo";
+        } else if (currency.equals("intense")){
+            table = "intense";
         }
         return table;
     }
@@ -96,7 +98,6 @@ public class ClaimHandler {
                     lastBonusDay = resultSet.getInt(10);
                     payoutDayReached = resultSet.getInt(11);
                     addressExists = true;
-                } else {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -134,7 +135,7 @@ public class ClaimHandler {
                 }
 
                 double keerDing = 1 + dailyBonus;
-                if(balance > payoutAmount){
+                if(balance > WithdrawHandler.getWithdrawLimit(currency)){
                     payout = true;
                 }
                 claimAmount = Prices.getClaimAmount(claimsToday, currency);
@@ -142,7 +143,7 @@ public class ClaimHandler {
                 balance = balance + claimAmount * keerDing;
                 claims = claims + 1;
                 lastClaim = date.getTime();
-                if (!payout && balance > payoutAmount){
+                if (!payout && balance > WithdrawHandler.getWithdrawLimit(currency)){
                     payoutDayReached = day;
                 }
                 if (addressExists) {
@@ -223,6 +224,8 @@ public class ClaimHandler {
                 jsonArrayIp = jsonArrayIpSumo;
             } else if (currency.equals("ryo")) {
                 jsonArrayIp = jsonArrayIpRyo;
+            } else if (currency.equals("intense")){
+                jsonArrayIp = jsonArrayIpIntense;
             }
 
             int num = -1;
@@ -255,6 +258,8 @@ public class ClaimHandler {
                 jsonArrayIpSumo = jsonArrayIp;
             } else if (currency.equals("ryo")) {
                 jsonArrayIpRyo = jsonArrayIp;
+            } else if (currency.equals("intense")){
+                 jsonArrayIpIntense = jsonArrayIp;
             }
         }
         return comp;
