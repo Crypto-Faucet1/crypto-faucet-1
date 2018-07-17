@@ -155,7 +155,8 @@ public class ClaimHandler {
 
                     String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
                             + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
-                            "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='" + payoutDayReached +"' WHERE address=?";
+                            "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
+                            + payoutDayReached +"', ip='" + ip + "' WHERE address=?";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
@@ -173,7 +174,7 @@ public class ClaimHandler {
 
                     String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
                             + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
-                            + "', '" + lastBonusDay + "', '" + payoutDayReached +"')";
+                            + "', '" + lastBonusDay + "', '" + payoutDayReached +"', '" + ip + "')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
