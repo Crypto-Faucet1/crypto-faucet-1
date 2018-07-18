@@ -218,7 +218,7 @@ public class ClaimHandler {
         }
 
         ///Double ip check
-        if (!comp) {
+        if (comp) {
             JSONArray jsonArrayIp = new JSONArray();
 
             if (currency.equals("sumo")) {
@@ -254,6 +254,7 @@ public class ClaimHandler {
                 jsonArrayIp.put(newItem);
             } else {
                 System.out.println(getTime() + "Ip double claim " + ip);
+                comp = false;
             }
             if (currency.equals("sumo")) {
                 jsonArrayIpSumo = jsonArrayIp;
