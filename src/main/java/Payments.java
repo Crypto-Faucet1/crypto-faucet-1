@@ -2,6 +2,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import spark.Request;
+import spark.Response;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -51,7 +53,7 @@ public class Payments {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if(jsonArray.length() >= 6){
+        if (jsonArray.length() >= 6) {
             makePayment(jsonArray, currency);
         } else {
             JSONArray jsonArray1 = new JSONArray();
@@ -59,6 +61,27 @@ public class Payments {
             jsonArray1.put(jsonObject);
             makePayment(jsonArray1, currency);
         }
+    }
+
+    static String getPayments(Request request, Response response) {
+        String currency = "sumo";
+        JSONArray jsonArray = new JSONArray();
+        try {
+            Statement stmt = ClaimHandler.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM payments WHERE currency='" + currency + "' ORDER BY date DESC");
+            while (rs.next()) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("date", getTimeString(rs.getTimestamp("date").getTime()));
+                jsonObject.put("txHash", rs.getString("txHash"));
+                jsonArray.put(jsonObject);
+            }
+
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return jsonArray.toString();
     }
 
     static boolean removeBalance(String currency, String address, Double balanceRemove) {
@@ -116,7 +139,7 @@ public class Payments {
                 removeBalance(currency, jsonObject1.getString("address"), jsonObject1.getDouble("amount") / 1000000000);
                 amount = amount + jsonObject1.getDouble("amount") / 1000000000;
             }
-            PaymentItem item = new PaymentItem(new Date().getTime(), txHash, txKey, amount, recipients, currency);
+            PaymentItem item = new PaymentItem(txHash, new Date().getTime(), txKey, amount, recipients, currency);
             addPayment(item);
         }
         return false;
@@ -136,7 +159,7 @@ public class Payments {
             Statement stmt = ClaimHandler.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT TOP 1 * FROM payments WHERE currency='" + currency + "'ORDER BY date DESC");
             while (rs.next()) {
-                lastestPayment = new PaymentItem(rs.getTimestamp(1).getTime(), rs.getString(2), rs.getString(3),
+                lastestPayment = new PaymentItem(rs.getString(1), rs.getTimestamp(2).getTime(), rs.getString(3),
                         rs.getDouble(4), new JSONArray(rs.getString(5)), rs.getString(6));
             }
             rs.close();
@@ -151,7 +174,7 @@ public class Payments {
         try {
             System.out.println("Adding payment to mysql");
             Statement stmt = ClaimHandler.conn.createStatement();
-            stmt.executeUpdate("INSERT INTO payments VALUES ('" + getTimeString(item.getDate()) + "', '" + item.getTxHash()
+            stmt.executeUpdate("INSERT INTO payments VALUES ('" + item.getTxHash() + "', '" + getTimeString(item.getDate())
                     + "', '" + item.getTxKey() + "', '" + item.getAmount() + "', '" + item.getReceipents().toString() + "', '" + item.getCurrency() + "')");
             stmt.close();
         } catch (SQLException e) {

@@ -1,4 +1,3 @@
-import org.json.JSONArray;
 import spark.Spark;
 
 import static spark.Spark.get;
@@ -29,5 +28,6 @@ public class x {
         });
         get("/rate", RateHandler::getClaimRate);
         post("/setbonus", setBonusHandler::setBonus);
+        get("/payments", Payments::getPayments);
     }
 }

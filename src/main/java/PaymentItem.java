@@ -8,7 +8,7 @@ public class PaymentItem {
     private JSONArray receipents;
     private String currency;
 
-    public PaymentItem(long date, String txHash, String txKey, double amount, JSONArray receipents, String currency) {
+    public PaymentItem( String txHash, long date, String txKey, double amount, JSONArray receipents, String currency) {
         this.date = date;
         this.txHash = txHash;
         this.txKey = txKey;
