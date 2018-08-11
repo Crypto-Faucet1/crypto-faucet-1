@@ -5,7 +5,6 @@ import spark.Response;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -16,28 +15,9 @@ public class WithdrawHandler {
         String address = request.queryParams("address");
         double balanceRemove = Double.parseDouble(request.queryParams("balanceRemove"));
         String currency = request.queryParams("currency");
-        String table = ClaimHandler.getTable(currency);
-        try {
-            Statement stmt = ClaimHandler.conn.createStatement();
-            PreparedStatement ps = ClaimHandler.conn.prepareStatement("SELECT * from " + table + " WHERE address = ?");
-            ps.setString(1, address);
-            ResultSet rs = ps.executeQuery();
-            double balance = 0;
-            double totalPaid = 0;
-            if (rs.next()) {
-                balance = rs.getDouble("balance");
-                totalPaid = rs.getDouble("totalPaid");
-            }
-            balance = balance - balanceRemove;
-            totalPaid = totalPaid + balanceRemove;
-            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE " + table + " SET balance=" + balance + ", totalPaid=" + totalPaid + " WHERE address = ?");
-            ps2.setString(1, address);
-            ps2.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            res = "SQLException Removing balance failed";
+        if(!Payments.removeBalance(currency, address, balanceRemove)){
+            res = "Failed";
         }
-
         return res;
     }
 

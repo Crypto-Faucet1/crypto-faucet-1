@@ -1,3 +1,4 @@
+import org.json.JSONArray;
 import spark.Spark;
 
 import static spark.Spark.get;
@@ -14,6 +15,11 @@ public class x {
         SetBonusHandler setBonusHandler = new SetBonusHandler();
         new Prices();
         new Stats();
+        try {
+            new Payments();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         post("/claim", claim::claimSumo);
         get("/addressInfo", getBalance::getAddressInfo);
