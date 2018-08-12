@@ -5,6 +5,7 @@ import static spark.Spark.path;
 import static spark.Spark.post;
 
 public class x {
+
     public static void main(String args[]) {
         Spark.port(9899);
         ClaimHandler claim = new ClaimHandler();

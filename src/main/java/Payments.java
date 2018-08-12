@@ -1,11 +1,15 @@
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,12 +18,12 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static org.toilelibre.libe.curl.Curl.curl;
-
 public class Payments {
+    private static HttpURLConnection con;
+
     public Payments() {
         Timer updateTimer = new Timer();
-        updateTimer.scheduleAtFixedRate(new update(), 5000, 14400000);
+        updateTimer.scheduleAtFixedRate(new update(), 5000, 43200000);
     }//1,000,000,000
 
     public class update extends TimerTask {
@@ -53,13 +57,15 @@ public class Payments {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if (jsonArray.length() >= 6) {
+        if (jsonArray.length() >= 5) {
             makePayment(jsonArray, currency);
         } else {
-            JSONArray jsonArray1 = new JSONArray();
-            JSONObject jsonObject = intAddress.getJSONObject(0);
-            jsonArray1.put(jsonObject);
-            makePayment(jsonArray1, currency);
+            if (intAddress.length() >= 0) {
+                JSONArray jsonArray1 = new JSONArray();
+                JSONObject jsonObject = intAddress.getJSONObject(0);
+                jsonArray1.put(jsonObject);
+                makePayment(jsonArray1, currency);
+            }
         }
     }
 
@@ -115,15 +121,10 @@ public class Payments {
 
     static boolean makePayment(JSONArray recipients, String currency) {
         System.out.println("Paying: " + recipients.toString());
-        String command = "-X POST http://127.0.0.1:8888/json_rpc -d '{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"transfer\",\"params\":{\"destinations\":" +
-                recipients
-                + ",\"get_tx_key\": true}}' -H 'Content-Type: application/json'";
-        System.out.println(command);
-        HttpResponse res = curl(command);
         String response = "";
         try {
-            response = IOUtils.toString(res.getEntity().getContent());
-        } catch (IOException e) {
+            response = sendPostRequest(recipients);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         System.out.println(response);
@@ -188,5 +189,50 @@ public class Payments {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String time = sdf.format(dt);
         return time;
+    }
+
+    static String sendPostRequest(JSONArray recipients) throws IOException {
+        String cont = "";
+        String url = "http://127.0.0.1:8888/json_rpc";
+        String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"transfer\",\"params\":{\"destinations\":" +
+                recipients
+                + ",\"get_tx_key\": true}}";
+        System.out.println(urlParameters);
+        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+        try {
+
+            URL myurl = new URL(url);
+            con = (HttpURLConnection) myurl.openConnection();
+
+            con.setDoOutput(true);
+            con.setRequestMethod("POST");
+            con.setRequestProperty("User-Agent", "Java client");
+            con.setRequestProperty("Content-Type", "application/json");
+
+            try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+                wr.write(postData);
+            }
+
+            StringBuilder content;
+
+            try (BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()))) {
+
+                String line;
+                content = new StringBuilder();
+
+                while ((line = in.readLine()) != null) {
+                    content.append(line);
+                    content.append(System.lineSeparator());
+                }
+            }
+            cont = content.toString();
+            System.out.println(cont);
+        } finally {
+
+            con.disconnect();
+        }
+        return cont;
     }
 }

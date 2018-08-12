@@ -92,15 +92,15 @@ public class Prices {
         if (currency.equals("sumo")) {
             Random rand = new Random();
             int value = rand.nextInt(100) + 1;
-            amount = 0.00000020 / Prices.sumoRate;
+            amount = 0.00000015 / Prices.sumoRate;
             if (value <= 50) {
-                amount = 0.00000007 / Prices.sumoRate;
+                amount = 0.000000075 / Prices.sumoRate;
             } else if (value <= 90) {
                 amount = 0.00000015 / Prices.sumoRate;
             } else if (value <= 94) {
-                amount = 0.00000270 / Prices.sumoRate;
+                amount = 0.00000250 / Prices.sumoRate;
             } else if (value <= 97) {
-                amount = 0.00000590 / Prices.sumoRate;
+                amount = 0.00000540 / Prices.sumoRate;
             }
 
             amount = amount * 0.7;
@@ -125,6 +125,7 @@ public class Prices {
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
+            amount = amount * 0.95; //12-08-2018
 
             if (claimsToday == 1) {
                 amount = amount * 3;
@@ -134,13 +135,13 @@ public class Prices {
             int value = rand.nextInt(100) + 1;
             amount = 0.00000020 / Prices.ryoRate;
             if (value <= 50) {
-                amount = 0.00000007 / Prices.ryoRate;
+                amount = 0.000000075 / Prices.ryoRate;
             } else if (value <= 90) {
                 amount = 0.00000015 / Prices.ryoRate;
             } else if (value <= 94) {
-                amount = 0.00000270 / Prices.ryoRate;
+                amount = 0.00000250 / Prices.ryoRate;
             } else if (value <= 97) {
-                amount = 0.00000590 / Prices.ryoRate;
+                amount = 0.00000540 / Prices.ryoRate;
             }
 
             amount = amount * 0.7;
@@ -165,6 +166,8 @@ public class Prices {
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
+            amount = amount * 0.95; //12-08-2018
+
 
             if (claimsToday == 1) {
                 amount = amount * 3;
@@ -205,6 +208,7 @@ public class Prices {
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
+            amount = amount * 0.95; //12-08-2018
 
             if (claimsToday == 1) {
                 amount = amount * 3;
