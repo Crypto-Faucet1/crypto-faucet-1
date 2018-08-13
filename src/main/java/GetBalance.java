@@ -23,7 +23,7 @@ public class GetBalance {
         int claimsToday = 0;
         int lastClaimDay = 0;
         int lastBonusDay = 0;
-        int payoutDayReached = 0;
+        long payoutDayReached = 0;
         String table = ClaimHandler.getTable(currency);
         String queryCheck = "SELECT * from " + table +" WHERE address = ?";
         try {
@@ -42,7 +42,7 @@ public class GetBalance {
                 lastClaimDay = resultSet.getInt(8);
                 claimsToday = resultSet.getInt(9);
                 lastBonusDay = resultSet.getInt(10);
-                payoutDayReached = resultSet.getInt(11);
+                payoutDayReached = resultSet.getTimestamp(11).getTime();
             }
         } catch (SQLException e) {
             e.printStackTrace();

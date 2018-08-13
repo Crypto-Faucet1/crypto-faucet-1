@@ -76,7 +76,7 @@ public class ClaimHandler {
             int claimsToday = 0;
             int lastClaimDay = 0;
             int lastBonusDay = 0;
-            int payoutDayReached = 0;
+            long payoutDayReached = 0;
             boolean addressExists = false;
 
             String queryCheck = "SELECT * from " + table + " WHERE address = ?";
@@ -96,7 +96,7 @@ public class ClaimHandler {
                     lastClaimDay = resultSet.getInt(8);
                     claimsToday = resultSet.getInt(9);
                     lastBonusDay = resultSet.getInt(10);
-                    payoutDayReached = resultSet.getInt(11);
+                    payoutDayReached = resultSet.getTimestamp(11).getTime();
                     addressExists = true;
                 }
             } catch (SQLException e) {
@@ -144,7 +144,7 @@ public class ClaimHandler {
                 claims = claims + 1;
                 lastClaim = date.getTime();
                 if (!payout && balance > WithdrawHandler.getWithdrawLimit(currency)){
-                    payoutDayReached = day;
+                    payoutDayReached = date.getTime();
                 }
                 if (addressExists) {
                     java.util.Date dt = new java.util.Date(lastClaim);
@@ -156,7 +156,7 @@ public class ClaimHandler {
                     String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
                             + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
                             "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
-                            + payoutDayReached +"', ip='" + ip + "' WHERE address=?";
+                            + Payments.getTimeString(payoutDayReached) +"', ip='" + ip + "' WHERE address=?";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
@@ -174,7 +174,7 @@ public class ClaimHandler {
 
                     String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
                             + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
-                            + "', '" + lastBonusDay + "', '" + payoutDayReached +"', '" + ip + "')";
+                            + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) +"', '" + ip + "')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);

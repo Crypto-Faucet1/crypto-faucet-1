@@ -57,6 +57,7 @@ public class Payments {
         String table = ClaimHandler.getTable(currency);
         JSONArray intAddress = new JSONArray();
         JSONArray jsonArray = new JSONArray();
+        long lastTime = 0;
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > " + WithdrawHandler.getWithdrawLimit(currency));
@@ -64,11 +65,25 @@ public class Payments {
                 JSONObject item = new JSONObject();
                 double balance = rs.getDouble("balance");
                 item.put("address", rs.getString("address"));
+                long payoutDayReached = 0;
+                try {
+                    payoutDayReached = rs.getTimestamp("payoutDayReached").getTime();
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
                 if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN")) {
-                    balance = balance - 0.015;
-                    item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
-                    intAddress.put(item);
+                    if(new Date().getTime() - payoutDayReached > 475200000) {
+                        balance = balance - 0.015;
+                        item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
+                        intAddress.put(item);
+                    }
                 } else {
+                    if (lastTime == 0) {
+                        lastTime = payoutDayReached;
+                    }
+                    if (payoutDayReached < lastTime){
+                        lastTime = payoutDayReached;
+                    }
                     item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
                     jsonArray.put(item);
                 }
@@ -76,7 +91,9 @@ public class Payments {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if (jsonArray.length() >= 4) {
+        long diff = new Date().getTime() - lastTime;
+        System.out.println("Diff: " + diff);
+        if (jsonArray.length() >= 4 || diff > 475200000 && jsonArray.length() > 0) {
             makePayment(jsonArray, currency);
         } else {
             if (intAddress.length() > 0) {
@@ -148,7 +165,7 @@ public class Payments {
         }
         try {
             JSONObject jsonObject11 = new JSONObject(response).getJSONObject("result");
-            if (jsonObject11.getJSONObject("error").getInt("code") == -38){
+            if (jsonObject11.getJSONObject("error").getInt("code") == -38) {
                 response = sendPostRequest(recipients, currency);
             }
         } catch (Exception e) {

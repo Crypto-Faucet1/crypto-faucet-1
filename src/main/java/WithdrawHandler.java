@@ -38,7 +38,7 @@ public class WithdrawHandler {
                 item.put("totalPaid", rs.getDouble("totalPaid"));
                 item.put("claimsToday", rs.getDouble("claimsToday"));
                 item.put("claims", rs.getDouble("claims"));
-                item.put("payoutDayReached", rs.getDouble("payoutDayReached"));
+                item.put("payoutDayReached", Payments.getTimeString(rs.getTimestamp("payoutDayReached").getTime()));
                 jsonArrayTop.put(item);
                 command = command + rs.getString("address") + " " + round(balance, 5) + " ";
                 total = total + balance;
