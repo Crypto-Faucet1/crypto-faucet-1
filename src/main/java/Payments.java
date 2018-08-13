@@ -30,16 +30,26 @@ public class Payments {
     public class update extends TimerTask {
         @Override
         public void run() {
-            try {
-                proccessPayments("sumo");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                proccessPayments("ryo");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Thread t = new Thread(() -> {
+                try {
+                    System.out.println("Processing Sumo payments");
+                    proccessPayments("sumo");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    System.out.println("Processing Ryo payments");
+                    proccessPayments("ryo");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            t.start();
         }
     }
 
@@ -69,7 +79,7 @@ public class Payments {
         if (jsonArray.length() >= 4) {
             makePayment(jsonArray, currency);
         } else {
-            if (intAddress.length() >= 0) {
+            if (intAddress.length() > 0) {
                 JSONArray jsonArray1 = new JSONArray();
                 JSONObject jsonObject = intAddress.getJSONObject(0);
                 jsonArray1.put(jsonObject);
@@ -136,6 +146,15 @@ public class Payments {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            JSONObject jsonObject11 = new JSONObject(response).getJSONObject("result");
+            if (jsonObject11.getJSONObject("error").getInt("code") == -38){
+                response = sendPostRequest(recipients, currency);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         System.out.println(response);
         JSONObject jsonObject = new JSONObject(response).getJSONObject("result");
         if (jsonObject.isNull("tx_hash")) {
