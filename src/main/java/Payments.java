@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -29,7 +30,16 @@ public class Payments {
     public class update extends TimerTask {
         @Override
         public void run() {
-            proccessPayments("sumo");
+            try {
+                proccessPayments("sumo");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                proccessPayments("ryo");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -43,21 +53,20 @@ public class Payments {
             while (rs.next()) {
                 JSONObject item = new JSONObject();
                 double balance = rs.getDouble("balance");
-                if (rs.getString("address").substring(0, 4).equals("Sumi")) {
-                    balance = balance - 0.015;
-                }
-                item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
                 item.put("address", rs.getString("address"));
-                if (rs.getString("address").substring(0, 4).equals("Sumi")) {
+                if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN")) {
+                    balance = balance - 0.015;
+                    item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
                     intAddress.put(item);
                 } else {
+                    item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
                     jsonArray.put(item);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if (jsonArray.length() >= 5) {
+        if (jsonArray.length() >= 4) {
             makePayment(jsonArray, currency);
         } else {
             if (intAddress.length() >= 0) {
@@ -70,7 +79,7 @@ public class Payments {
     }
 
     static String getPayments(Request request, Response response) {
-        String currency = "sumo";
+        String currency = request.queryParams("currency");
         JSONArray jsonArray = new JSONArray();
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
@@ -123,7 +132,7 @@ public class Payments {
         System.out.println("Paying: " + recipients.toString());
         String response = "";
         try {
-            response = sendPostRequest(recipients);
+            response = sendPostRequest(recipients, currency);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -191,9 +200,15 @@ public class Payments {
         return time;
     }
 
-    static String sendPostRequest(JSONArray recipients) throws IOException {
+    static String sendPostRequest(JSONArray recipients, String currency) throws IOException {
+        String url = "";
+        if (currency.equals("sumo")) {
+            url = "http://127.0.0.1:8888/json_rpc";
+        } else if (currency.equals("ryo")) {
+            url = "http://127.0.0.1:8889/json_rpc";
+        }
         String cont = "";
-        String url = "http://127.0.0.1:8888/json_rpc";
+
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"transfer\",\"params\":{\"destinations\":" +
                 recipients
                 + ",\"get_tx_key\": true}}";
@@ -209,6 +224,9 @@ public class Payments {
             con.setRequestMethod("POST");
             con.setRequestProperty("User-Agent", "Java client");
             con.setRequestProperty("Content-Type", "application/json");
+            String userpass = "ryoWallet:sdfghruhvk";
+            String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
+            con.setRequestProperty("Authorization", basicAuth);
 
             try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
                 wr.write(postData);
@@ -228,7 +246,6 @@ public class Payments {
                 }
             }
             cont = content.toString();
-            System.out.println(cont);
         } finally {
 
             con.disconnect();
