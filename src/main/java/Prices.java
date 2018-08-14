@@ -14,6 +14,8 @@ public class Prices {
     static Double ryoRate = 0.0001000;
     static Double intenseRate = 0.00000039;
     static Double sumoChange7d = 0.0;
+    static Double ryoChange7d = 0.0;
+    static Double intenseChange7d = 0.0;
 
     Prices() {
         Timer updateTimer = new Timer();
@@ -23,16 +25,14 @@ public class Prices {
     private class UpdateTask extends TimerTask {
         @Override
         public void run() {
-            updateSumoRate();
-            updateRyoRate();
-            updateIntenseRate();
+            updateRates();
         }
     }
 
-    private void updateSumoRate() {
+    private void updateRates() {
         OkHttpClient client = new OkHttpClient();
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=SUMO&convert=BTC&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=SUMO,RYO,ITNS&convert=BTC&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -41,52 +41,22 @@ public class Prices {
         try {
             okhttp3.Response response = client.newCall(request).execute();
             JSONObject jsonObject = new JSONObject(response.body().string());
-            JSONObject jsonObjectBtc = jsonObject.getJSONObject("data").getJSONObject("SUMO").getJSONObject("quote").getJSONObject("BTC");
-            sumoRate = jsonObjectBtc.getDouble("price");
-            sumoChange7d = jsonObjectBtc.getDouble("percent_change_7d");
+            JSONObject jsonObjectSumo = jsonObject.getJSONObject("data").getJSONObject("SUMO").getJSONObject("quote").getJSONObject("BTC");
+            JSONObject jsonObjectRyo = jsonObject.getJSONObject("data").getJSONObject("RYO").getJSONObject("quote").getJSONObject("BTC");
+            JSONObject jsonObjectIntense = jsonObject.getJSONObject("data").getJSONObject("ITNS").getJSONObject("quote").getJSONObject("BTC");
+
+            sumoRate = jsonObjectSumo.getDouble("price");
+            sumoChange7d = jsonObjectSumo.getDouble("percent_change_7d");
+            ryoRate = jsonObjectRyo.getDouble("price");
+            ryoChange7d = jsonObjectRyo.getDouble("percent_change_7d");
+            intenseRate = jsonObjectIntense.getDouble("price");
+            intenseChange7d = jsonObjectIntense.getDouble("percent_change_7d");
         } catch (Exception e) {
             e.printStackTrace();
         }
         System.out.println(getTime() + "Sumo rate updated " + sumoRate + " change7d " + sumoChange7d);
-    }
-
-    private void updateRyoRate() {
-
-        OkHttpClient client = new OkHttpClient();
-
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://tradeogre.com/api/v1/ticker/BTC-RYO").newBuilder();
-        String url = urlBuilder.build().toString();
-
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .build();
-        try {
-            okhttp3.Response response = client.newCall(request).execute();
-            JSONObject jsonObject = new JSONObject(response.body().string());
-            ryoRate = jsonObject.getDouble("price");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println(getTime() + "Ryo rate updated " + ryoRate);
-    }
-    private void updateIntenseRate() {
-
-        OkHttpClient client = new OkHttpClient();
-
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://tradeogre.com/api/v1/ticker/BTC-ITNS").newBuilder();
-        String url = urlBuilder.build().toString();
-
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .build();
-        try {
-            okhttp3.Response response = client.newCall(request).execute();
-            JSONObject jsonObject = new JSONObject(response.body().string());
-            intenseRate = jsonObject.getDouble("price");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println(getTime() + "Intense rate updated " + intenseRate);
+        System.out.println(getTime() + "Ryo rate updated " + ryoRate + " change7d " + ryoChange7d);
+        System.out.println(getTime() + "Intense rate updated " + intenseRate + " change7d " + intenseChange7d);
     }
 
     public static double getClaimAmount(int claimsToday, String currency) {
@@ -129,16 +99,20 @@ public class Prices {
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
 
-            if (sumoChange7d <= -20.0 && sumoChange7d >= -30.0){
-                amount = amount * 0.8;
-            } else if (sumoChange7d < -30.0){
-                amount = amount * 0.65;
+            if (sumoChange7d <= -40.0) {
+                amount = amount * 0.5;
+            } else if (sumoChange7d <= -30) {
+                amount = amount * 0.4;
+            } else if (sumoChange7d <= -20) {
+                amount = amount * 0.3;
+            } else if (sumoChange7d <= -10 && sumoChange7d >= -5) {
+                amount = amount * 0.15;
             }
 
             if (claimsToday == 1) {
                 amount = amount * 3;
             }
-        } else if (currency.equals("ryo")){
+        } else if (currency.equals("ryo")) {
             Random rand = new Random();
             int value = rand.nextInt(100) + 1;
             amount = 0.00000020 / Prices.ryoRate;
@@ -176,11 +150,20 @@ public class Prices {
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
 
+            if (ryoChange7d <= -40.0) {
+                amount = amount * 0.5;
+            } else if (ryoChange7d <= -30) {
+                amount = amount * 0.4;
+            } else if (ryoChange7d <= -20) {
+                amount = amount * 0.3;
+            } else if (ryoChange7d <= -10 && ryoChange7d >= -5) {
+                amount = amount * 0.15;
+            }
 
             if (claimsToday == 1) {
                 amount = amount * 3;
             }
-        } else if (currency.equals("intense")){
+        } else if (currency.equals("intense")) {
             Random rand = new Random();
             int value = rand.nextInt(100) + 1;
             amount = 0.00000020 / Prices.intenseRate;
@@ -217,6 +200,16 @@ public class Prices {
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
+
+            if (intenseChange7d <= -40.0) {
+                amount = amount * 0.5;
+            } else if (intenseChange7d <= -30) {
+                amount = amount * 0.4;
+            } else if (intenseChange7d <= -20) {
+                amount = amount * 0.3;
+            } else if (intenseChange7d <= -10 && intenseChange7d >= -5) {
+                amount = amount * 0.15;
+            }
 
             if (claimsToday == 1) {
                 amount = amount * 3;
