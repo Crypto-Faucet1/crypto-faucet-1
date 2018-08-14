@@ -13,6 +13,7 @@ public class Prices {
     static Double sumoRate = 0.00013826;
     static Double ryoRate = 0.0001000;
     static Double intenseRate = 0.00000039;
+    static Double sumoChange7d = 0.0;
 
     Prices() {
         Timer updateTimer = new Timer();
@@ -31,7 +32,7 @@ public class Prices {
     private void updateSumoRate() {
         OkHttpClient client = new OkHttpClient();
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://api.coinmarketcap.com/v2/ticker/1694/?convert=BTC").newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=SUMO&convert=BTC&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -40,12 +41,13 @@ public class Prices {
         try {
             okhttp3.Response response = client.newCall(request).execute();
             JSONObject jsonObject = new JSONObject(response.body().string());
-            JSONObject jsonObjectBtc = jsonObject.getJSONObject("data").getJSONObject("quotes").getJSONObject("BTC");
+            JSONObject jsonObjectBtc = jsonObject.getJSONObject("data").getJSONObject("SUMO").getJSONObject("quote").getJSONObject("BTC");
             sumoRate = jsonObjectBtc.getDouble("price");
+            sumoChange7d = jsonObjectBtc.getDouble("percent_change_7d");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(getTime() + "Sumo rate updated " + sumoRate);
+        System.out.println(getTime() + "Sumo rate updated " + sumoRate + " change7d " + sumoChange7d);
     }
 
     private void updateRyoRate() {
@@ -126,6 +128,12 @@ public class Prices {
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
+
+            if (sumoChange7d <= -20.0 && sumoChange7d >= -30.0){
+                amount = amount * 0.8;
+            } else if (sumoChange7d < -30.0){
+                amount = amount * 0.65;
+            }
 
             if (claimsToday == 1) {
                 amount = amount * 3;
