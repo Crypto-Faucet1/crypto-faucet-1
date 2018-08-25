@@ -32,7 +32,7 @@ public class Prices {
     private void updateRates() {
         OkHttpClient client = new OkHttpClient();
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=SUMO,RYO,ITNS&convert=BTC&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=SUMO,RYO,LTHN&convert=BTC&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -43,7 +43,7 @@ public class Prices {
             JSONObject jsonObject = new JSONObject(response.body().string());
             JSONObject jsonObjectSumo = jsonObject.getJSONObject("data").getJSONObject("SUMO").getJSONObject("quote").getJSONObject("BTC");
             JSONObject jsonObjectRyo = jsonObject.getJSONObject("data").getJSONObject("RYO").getJSONObject("quote").getJSONObject("BTC");
-            JSONObject jsonObjectIntense = jsonObject.getJSONObject("data").getJSONObject("ITNS").getJSONObject("quote").getJSONObject("BTC");
+            JSONObject jsonObjectIntense = jsonObject.getJSONObject("data").getJSONObject("LTHN").getJSONObject("quote").getJSONObject("BTC");
 
             sumoRate = jsonObjectSumo.getDouble("price");
             sumoChange7d = jsonObjectSumo.getDouble("percent_change_7d");
@@ -56,7 +56,7 @@ public class Prices {
         }
         System.out.println(getTime() + "Sumo rate updated " + sumoRate + " change7d " + sumoChange7d);
         System.out.println(getTime() + "Ryo rate updated " + ryoRate + " change7d " + ryoChange7d);
-        System.out.println(getTime() + "Intense rate updated " + intenseRate + " change7d " + intenseChange7d);
+        System.out.println(getTime() + "Lethean rate updated " + intenseRate + " change7d " + intenseChange7d);
     }
 
     public static double getClaimAmount(int claimsToday, String currency) {
