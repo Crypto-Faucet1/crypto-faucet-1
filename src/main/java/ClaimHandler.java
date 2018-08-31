@@ -146,10 +146,10 @@ public class ClaimHandler {
                 if (!payout && balance > WithdrawHandler.getWithdrawLimit(currency)){
                     payoutDayReached = date.getTime();
                 }
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 if (addressExists) {
                     java.util.Date dt = new java.util.Date(lastClaim);
                     java.util.Date dt2 = new java.util.Date(dailyLastClaim);
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String currentTime = sdf.format(dt);
                     String currentTime2 = sdf.format(dt2);
 
@@ -168,7 +168,6 @@ public class ClaimHandler {
                 } else {
                     java.util.Date dt = new java.util.Date(lastClaim);
                     java.util.Date dt2 = new java.util.Date(dailyLastClaim);
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String currentTime = sdf.format(dt);
                     String currentTime2 = sdf.format(dt2);
 
@@ -183,6 +182,15 @@ public class ClaimHandler {
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
+                }
+                String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" +  claimAmount + "', '" + ip + "', '" + currency + "')";
+                try {
+                    PreparedStatement ps = conn.prepareStatement(insert2);
+                    ps.setString(1, address);
+                    ps.executeQuery();
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
                 System.out.println(getTime() + "Faucet claim successful balance: " + WithdrawHandler.round(balance, 5) + currency + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
             } else {

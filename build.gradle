@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.sparkjava:spark-core:2.7.1"
+    compile "com.sparkjava:spark-core:2.7.2"
     //compile 'com.google.guava:guava:24.1.1-jre'
     compile 'org.json:json:20180130'
     compile 'org.slf4j:slf4j-simple:1.7.25'
