@@ -272,6 +272,11 @@ public class ClaimHandler {
                  jsonArrayIpIntense = jsonArrayIp;
             }
         }
+        try {
+            System.out.println("Block: " + IpHub.checkIp(ip));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         return comp;
     }
 

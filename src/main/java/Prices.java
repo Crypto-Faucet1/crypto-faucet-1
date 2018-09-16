@@ -98,6 +98,7 @@ public class Prices {
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
+            amount = amount * 0.9; //16-09-2018
 
             if (sumoChange7d <= -40.0) {
                 amount = amount * 0.5;
@@ -149,6 +150,7 @@ public class Prices {
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
+            amount = amount * 0.9; //16-09-2018
 
             if (ryoChange7d <= -40.0) {
                 amount = amount * 0.5;
@@ -200,6 +202,7 @@ public class Prices {
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
+            amount = amount * 0.9; //16-09-2018
 
             if (intenseChange7d <= -40.0) {
                 amount = amount * 0.5;
