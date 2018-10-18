@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Timer;
@@ -53,6 +54,32 @@ public class Payments {
         }
     }
 
+    static String startProccessPayment(Request request, Response response){
+        if(request.queryParams("currency").equals("sumo")){
+            try {
+                System.out.println("Processing Sumo payments");
+                proccessPayments("sumo");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if(request.queryParams("currency").equals("ryo")){
+            try {
+                System.out.println("Processing Ryo payments");
+                proccessPayments("ryo");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if(request.queryParams("currency").equals("intense")){
+            try {
+                System.out.println("Processing intense payments");
+                proccessPayments("intense");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
     static void proccessPayments(String currency) {
         String table = ClaimHandler.getTable(currency);
         JSONArray intAddress = new JSONArray();
@@ -71,7 +98,8 @@ public class Payments {
                 } catch (Exception e){
                     e.printStackTrace();
                 }
-                if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN")) {
+                if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN") ||
+                        rs.getString("address").substring(0, 2).equals("Na")) {
                     if(new Date().getTime() - payoutDayReached > 475200000) {
                         balance = balance - 0.015;
                         item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
@@ -84,7 +112,9 @@ public class Payments {
                     if (payoutDayReached < lastTime){
                         lastTime = payoutDayReached;
                     }
-                    item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
+                    DecimalFormat decimalFormat = new DecimalFormat("0");
+                    double ase = WithdrawHandler.round(balance, 2) * 1000000000;
+                    item.put("amount", decimalFormat.format(ase));
                     jsonArray.put(item);
                 }
             }
@@ -242,6 +272,8 @@ public class Payments {
             url = "http://127.0.0.1:8888/json_rpc";
         } else if (currency.equals("ryo")) {
             url = "http://127.0.0.1:8889/json_rpc";
+        } else if (currency.equals("intense")){
+            url = "http://192.168.2.26:4878/json_rpc";
         }
         String cont = "";
 

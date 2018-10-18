@@ -26,6 +26,7 @@ public class x {
         path("/withdraw", () -> {
             get("/top", withdrawHandler::getTop);
             post("/remove", withdrawHandler::removeBalance);
+            post("/proccess", Payments::startProccessPayment);
         });
         get("/rate", RateHandler::getClaimRate);
         post("/setbonus", setBonusHandler::setBonus);

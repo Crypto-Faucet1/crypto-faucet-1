@@ -69,9 +69,9 @@ public class Prices {
                 amount = 0.000000075 / Prices.sumoRate;
             } else if (value <= 90) {
                 amount = 0.00000015 / Prices.sumoRate;
-            } else if (value <= 94) {
+            } else if (value <= 95) {
                 amount = 0.00000250 / Prices.sumoRate;
-            } else if (value <= 97) {
+            } else if (value <= 98) {
                 amount = 0.00000540 / Prices.sumoRate;
             }
 
@@ -99,6 +99,7 @@ public class Prices {
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
             amount = amount * 0.9; //16-09-2018
+            amount = amount * 0.6; //23-09-2018
 
             if (sumoChange7d <= -40.0) {
                 amount = amount * 0.5;
@@ -121,9 +122,9 @@ public class Prices {
                 amount = 0.000000075 / Prices.ryoRate;
             } else if (value <= 90) {
                 amount = 0.00000015 / Prices.ryoRate;
-            } else if (value <= 94) {
+            } else if (value <= 95) {
                 amount = 0.00000250 / Prices.ryoRate;
-            } else if (value <= 97) {
+            } else if (value <= 98) {
                 amount = 0.00000540 / Prices.ryoRate;
             }
 
@@ -151,6 +152,7 @@ public class Prices {
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
             amount = amount * 0.9; //16-09-2018
+            amount = amount * 0.6; //23-09-2018
 
             if (ryoChange7d <= -40.0) {
                 amount = amount * 0.5;
@@ -173,9 +175,9 @@ public class Prices {
                 amount = 0.00000007 / Prices.intenseRate;
             } else if (value <= 90) {
                 amount = 0.00000015 / Prices.intenseRate;
-            } else if (value <= 94) {
+            } else if (value <= 95) {
                 amount = 0.00000270 / Prices.intenseRate;
-            } else if (value <= 97) {
+            } else if (value <= 98) {
                 amount = 0.00000590 / Prices.intenseRate;
             }
 
@@ -203,6 +205,8 @@ public class Prices {
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
             amount = amount * 0.9; //16-09-2018
+            amount = amount * 0.6; //23-09-2018
+            amount = amount * 0.65; //25-09-2018
 
             if (intenseChange7d <= -40.0) {
                 amount = amount * 0.5;

@@ -47,26 +47,37 @@ public class ClaimHandler {
         String address = request.queryParams("address").replaceAll("\\s+", "");
         String ip = request.queryParams("ip");
         String currency = request.queryParams("currency");
-        return claim(address, captcha, ip, currency) + "";
+        String userAgent = request.queryParamOrDefault("user-agent", "no");
+        return claim(address, captcha, ip, currency, userAgent) + "";
     }
 
-    static String getTable(String currency){
+    static String getTable(String currency) {
         String table = "";
         if (currency.equals("sumo")) {
             table = "sumo";
         } else if (currency.equals("ryo")) {
             table = "ryo";
-        } else if (currency.equals("intense")){
+        } else if (currency.equals("intense")) {
             table = "intense";
         }
         return table;
     }
 
-    private boolean claim(String address, String captcha, String ip, String currency) {
+    private boolean claim(String address, String captcha, String ip, String currency, String userAgent) {
         String table = getTable(currency);
         boolean comp = true;
+        int fraudScore = -1;
 
         if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
+            if (!userAgent.equals("no")) {
+                try {
+                    fraudScore = IpHub.checkIpQuality(ip, userAgent);//get fraudscore
+                    System.out.println("Fraud score: " + fraudScore);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
             double balance = 0.0;
             double totalPaid = 0.0;
             long lastClaim = 0;
@@ -134,16 +145,35 @@ public class ClaimHandler {
                     lastClaimDay = day;
                 }
 
-                double keerDing = 1 + dailyBonus;
-                if(balance > WithdrawHandler.getWithdrawLimit(currency)){
+                if (balance > WithdrawHandler.getWithdrawLimit(currency)) {
                     payout = true;
                 }
                 claimAmount = Prices.getClaimAmount(claimsToday, currency);
+                if (currency.equals("sumo") || currency.equals("ryo")) {
+                    if (balance >= 0.3) {
+                        claimAmount = claimAmount * 0.6;
+                    } else if (balance > 0.12) {
+                        claimAmount = claimAmount * 0.85;
+                    }
+                } else if (currency.equals("intense")) {
+                    if (balance > 45) {
+                        claimAmount = claimAmount * 0.6;
+                    } else if (balance > 15) {
+                        claimAmount = claimAmount * 0.85;
+                    }
+                }
+                if (fraudScore == 100) {
+                    claimAmount = claimAmount * 0.70;
+                } else if (fraudScore >= 75) {
+                    claimAmount = claimAmount * 0.80;
+                }
 
-                balance = balance + claimAmount * keerDing;
+                claimAmount = claimAmount * (1 + dailyBonus);
+
+                balance = balance + claimAmount;
                 claims = claims + 1;
                 lastClaim = date.getTime();
-                if (!payout && balance > WithdrawHandler.getWithdrawLimit(currency)){
+                if (!payout && balance > WithdrawHandler.getWithdrawLimit(currency)) {
                     payoutDayReached = date.getTime();
                 }
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -156,7 +186,7 @@ public class ClaimHandler {
                     String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
                             + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
                             "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
-                            + Payments.getTimeString(payoutDayReached) +"', ip='" + ip + "' WHERE address=?";
+                            + Payments.getTimeString(payoutDayReached) + "', ip='" + ip + "' WHERE address=?";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
@@ -173,7 +203,7 @@ public class ClaimHandler {
 
                     String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
                             + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
-                            + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) +"', '" + ip + "')";
+                            + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', '" + ip + "')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert);
                         ps.setString(1, address);
@@ -183,7 +213,7 @@ public class ClaimHandler {
                         e.printStackTrace();
                     }
                 }
-                String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" +  claimAmount + "', '" + ip + "', '" + currency + "')";
+                String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" + claimAmount + "', '" + ip + "', '" + currency + "')";
                 try {
                     PreparedStatement ps = conn.prepareStatement(insert2);
                     ps.setString(1, address);
@@ -221,6 +251,9 @@ public class ClaimHandler {
             okhttp3.Response response = client.newCall(request).execute();
             JSONObject jsonObject = new JSONObject(response.body().string());
             comp = jsonObject.getBoolean("success");
+            if (!comp) {
+                System.out.println("Recaptcha failed ip: " + ip + " " + currency);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -233,7 +266,7 @@ public class ClaimHandler {
                 jsonArrayIp = jsonArrayIpSumo;
             } else if (currency.equals("ryo")) {
                 jsonArrayIp = jsonArrayIpRyo;
-            } else if (currency.equals("intense")){
+            } else if (currency.equals("intense")) {
                 jsonArrayIp = jsonArrayIpIntense;
             }
 
@@ -268,14 +301,17 @@ public class ClaimHandler {
                 jsonArrayIpSumo = jsonArrayIp;
             } else if (currency.equals("ryo")) {
                 jsonArrayIpRyo = jsonArrayIp;
-            } else if (currency.equals("intense")){
-                 jsonArrayIpIntense = jsonArrayIp;
+            } else if (currency.equals("intense")) {
+                jsonArrayIpIntense = jsonArrayIp;
             }
-        }
-        try {
-            System.out.println("Block: " + IpHub.checkIp(ip));
-        }catch (Exception e){
-            e.printStackTrace();
+            /*
+            try {
+                if(IpHub.checkIp(ip) != 0) {
+                    System.out.println("Iphub not 0");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }*/
         }
         return comp;
     }

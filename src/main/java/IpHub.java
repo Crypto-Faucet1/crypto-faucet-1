@@ -23,4 +23,24 @@ public class IpHub {
         }
         return block;
     }
+
+    public static int checkIpQuality(String ip, String userAgent){
+        int fraudScore = -1;
+        OkHttpClient client = new OkHttpClient();
+
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://www.ipqualityscore.com/api/json/ip/NmYNOj530bGr0GtZJYRr4WdgTquoJfhm/" + ip + "?strictness=1&user_agent=" + userAgent).newBuilder();
+        String url = urlBuilder.build().toString();
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .build();
+        try {
+            okhttp3.Response response = client.newCall(request).execute();
+            JSONObject jsonObject = new JSONObject(response.body().string());
+            fraudScore = jsonObject.getInt("fraud_score");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return fraudScore;
+    }
 }
