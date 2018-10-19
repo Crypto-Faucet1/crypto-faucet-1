@@ -123,7 +123,7 @@ public class Payments {
         }
         long diff = new Date().getTime() - lastTime;
         System.out.println("Diff: " + diff);
-        if (jsonArray.length() >= 4 || diff > 475200000 && jsonArray.length() > 0) {
+        if (jsonArray.length() >= 5 || diff > 475200000 && jsonArray.length() > 0) {
             makePayment(jsonArray, currency);
         } else {
             if (intAddress.length() > 0) {

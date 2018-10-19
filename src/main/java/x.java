@@ -15,6 +15,8 @@ public class x {
         SetBonusHandler setBonusHandler = new SetBonusHandler();
         new Prices();
         new Stats();
+        new IpHub();
+
         try {
             new Payments();
         } catch (Exception e) {

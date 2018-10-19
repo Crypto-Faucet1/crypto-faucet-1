@@ -1,10 +1,7 @@
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class Stats {
     public Stats() {
@@ -21,6 +18,8 @@ public class Stats {
             int intense = timesClaimedToday("intense", time);
             StatsItem item = new StatsItem(getCurrentTime(), sumo, ryo, intense);
             insertInDb(item);
+
+            IpHub.ipqList = new ArrayList<>();
         }
     }
 

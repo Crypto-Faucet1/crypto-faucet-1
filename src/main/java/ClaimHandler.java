@@ -71,7 +71,7 @@ public class ClaimHandler {
         if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
             if (!userAgent.equals("no")) {
                 try {
-                    fraudScore = IpHub.checkIpQuality(ip, userAgent);//get fraudscore
+                    fraudScore = IpHub.getIpq(ip, userAgent).getFraudScore();//get fraudscore
                     System.out.println("Fraud score: " + fraudScore);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -163,7 +163,7 @@ public class ClaimHandler {
                     }
                 }
                 if (fraudScore == 100) {
-                    claimAmount = claimAmount * 0.70;
+                    claimAmount = claimAmount * 0.67;
                 } else if (fraudScore >= 75) {
                     claimAmount = claimAmount * 0.80;
                 }

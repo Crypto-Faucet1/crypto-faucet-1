@@ -2,8 +2,17 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class IpHub {
-    public static int checkIp(String ip){
+    static List<IpqItem> ipqList = new ArrayList<>();
+
+    public IpHub() {
+
+    }
+
+    public static int checkIp(String ip) {
         int block = 99;
         OkHttpClient client = new OkHttpClient();
 
@@ -24,7 +33,8 @@ public class IpHub {
         return block;
     }
 
-    public static int checkIpQuality(String ip, String userAgent){
+    public static IpqItem checkIpQuality(String ip, String userAgent) {
+        IpqItem item = null;
         int fraudScore = -1;
         OkHttpClient client = new OkHttpClient();
 
@@ -38,9 +48,26 @@ public class IpHub {
             okhttp3.Response response = client.newCall(request).execute();
             JSONObject jsonObject = new JSONObject(response.body().string());
             fraudScore = jsonObject.getInt("fraud_score");
+            item = new IpqItem(ip, fraudScore, jsonObject.getString("country_code"),
+                    jsonObject.getBoolean("proxy"), jsonObject.getBoolean("recent_abuse"));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return fraudScore;
+        return item;
+    }
+
+    public static IpqItem getIpq(String ip, String userAgent) {
+        IpqItem item = null;
+        for (int i = 0; i < ipqList.size(); ++i) {
+            IpqItem itemC = ipqList.get(i);
+            if (itemC.getIp().equals(ip)) {
+                item = itemC;
+            }
+        }
+        if (item == null) {
+            item = checkIpQuality(ip, userAgent);
+            ipqList.add(item);
+        }
+        return item;
     }
 }
