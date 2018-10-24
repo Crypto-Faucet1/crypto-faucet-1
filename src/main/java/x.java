@@ -23,7 +23,10 @@ public class x {
             e.printStackTrace();
         }
 
-        post("/claim", claim::claimSumo);
+        post("/claim", claim::claim);
+        path("/claim", () -> {
+            post("/v2", claim::claimV2);
+        });
         get("/addressInfo", getBalance::getAddressInfo);
         path("/withdraw", () -> {
             get("/top", withdrawHandler::getTop);

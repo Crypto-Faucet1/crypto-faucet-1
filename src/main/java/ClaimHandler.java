@@ -42,13 +42,23 @@ public class ClaimHandler {
         }
     }
 
-    String claimSumo(Request request, Response response) {
+    String claim(Request request, Response response) {
         String captcha = request.queryParams("captcha");
         String address = request.queryParams("address").replaceAll("\\s+", "");
         String ip = request.queryParams("ip");
         String currency = request.queryParams("currency");
         String userAgent = request.queryParamOrDefault("user-agent", "no");
-        return claim(address, captcha, ip, currency, userAgent) + "";
+        JSONObject jsonObject = claim(address, captcha, ip, currency, userAgent);
+        return jsonObject.getBoolean("success") + "";
+    }
+
+    String claimV2(Request request, Response response) {
+        String captcha = request.queryParams("captcha");
+        String address = request.queryParams("address").replaceAll("\\s+", "");
+        String ip = request.queryParams("ip");
+        String currency = request.queryParams("currency");
+        String userAgent = request.queryParamOrDefault("user-agent", "no");
+        return claim(address, captcha, ip, currency, userAgent).toString();
     }
 
     static String getTable(String currency) {
@@ -63,10 +73,20 @@ public class ClaimHandler {
         return table;
     }
 
-    private boolean claim(String address, String captcha, String ip, String currency, String userAgent) {
+    private JSONObject claim(String address, String captcha, String ip, String currency, String userAgent) {
         String table = getTable(currency);
         boolean comp = true;
         int fraudScore = -1;
+        double balance = 0.0;
+        double totalPaid = 0.0;
+        long lastClaim = 0;
+        double dailyBonus = 0;
+        long dailyLastClaim = 0;
+        int claims = 0;
+        int claimsToday = 0;
+        int lastClaimDay = 0;
+        int lastBonusDay = 0;
+        long payoutDayReached = 0;
 
         if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
             if (!userAgent.equals("no")) {
@@ -78,16 +98,6 @@ public class ClaimHandler {
                 }
             }
 
-            double balance = 0.0;
-            double totalPaid = 0.0;
-            long lastClaim = 0;
-            double dailyBonus = 0;
-            long dailyLastClaim = 0;
-            int claims = 0;
-            int claimsToday = 0;
-            int lastClaimDay = 0;
-            int lastBonusDay = 0;
-            long payoutDayReached = 0;
             boolean addressExists = false;
 
             String queryCheck = "SELECT * from " + table + " WHERE address = ?";
@@ -163,7 +173,7 @@ public class ClaimHandler {
                     }
                 }
                 if (fraudScore == 100) {
-                    claimAmount = claimAmount * 0.67;
+                    claimAmount = claimAmount * 0.66;
                 } else if (fraudScore >= 75) {
                     claimAmount = claimAmount * 0.80;
                 }
@@ -229,8 +239,19 @@ public class ClaimHandler {
         } else {
             comp = false;
         }
+        JSONObject claimItem = new JSONObject();
+        claimItem.put("success", comp);
+        try {
+            claimItem.put("balance", balance);
+            claimItem.put("dailyBonus", dailyBonus);
+            claimItem.put("totalPaid", totalPaid);
+            claimItem.put("lastClaim", lastClaim);
+            claimItem.put("claimsToday", claimsToday);
+        } catch (Exception ignored){
 
-        return comp;
+        }
+
+        return claimItem;
     }
 
     private boolean checkCaptcha(String captcha, String ip, String currency) {
