@@ -87,6 +87,7 @@ public class ClaimHandler {
         int lastClaimDay = 0;
         int lastBonusDay = 0;
         long payoutDayReached = 0;
+        int error = 0;
 
         if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
             if (!userAgent.equals("no")) {
@@ -187,57 +188,77 @@ public class ClaimHandler {
                     payoutDayReached = date.getTime();
                 }
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                if (addressExists) {
-                    java.util.Date dt = new java.util.Date(lastClaim);
-                    java.util.Date dt2 = new java.util.Date(dailyLastClaim);
-                    String currentTime = sdf.format(dt);
-                    String currentTime2 = sdf.format(dt2);
-
-                    String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
-                            + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
-                            "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
-                            + Payments.getTimeString(payoutDayReached) + "', ip='" + ip + "' WHERE address=?";
-                    try {
-                        PreparedStatement ps = conn.prepareStatement(insert);
-                        ps.setString(1, address);
-                        ps.executeUpdate();
-                        ps.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                boolean validAddress = true;
+                if (!addressExists) {
+                    if (currency.equals("ryo")) {
+                        String result = ExecuteShellCommand.executeCommand("/home/pi/ryo-wallet/ryo-address-validator " + address);
+                        JSONObject jsonObject = new JSONArray(result).getJSONObject(0);
+                        validAddress = jsonObject.getBoolean("valid");
                     }
-                } else {
-                    java.util.Date dt = new java.util.Date(lastClaim);
-                    java.util.Date dt2 = new java.util.Date(dailyLastClaim);
-                    String currentTime = sdf.format(dt);
-                    String currentTime2 = sdf.format(dt2);
+                }
+                if (validAddress) {
+                    if (addressExists) {
+                        java.util.Date dt = new java.util.Date(lastClaim);
+                        java.util.Date dt2 = new java.util.Date(dailyLastClaim);
+                        String currentTime = sdf.format(dt);
+                        String currentTime2 = sdf.format(dt2);
 
-                    String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
-                            + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
-                            + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', '" + ip + "')";
+                        String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
+                                + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
+                                "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
+                                + Payments.getTimeString(payoutDayReached) + "', ip='" + ip + "' WHERE address=?";
+                        try {
+                            PreparedStatement ps = conn.prepareStatement(insert);
+                            ps.setString(1, address);
+                            ps.executeUpdate();
+                            ps.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            comp = false;
+                            error = 500;
+                        }
+                    } else {
+                        java.util.Date dt = new java.util.Date(lastClaim);
+                        java.util.Date dt2 = new java.util.Date(dailyLastClaim);
+                        String currentTime = sdf.format(dt);
+                        String currentTime2 = sdf.format(dt2);
+
+                        String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
+                                + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
+                                + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', '" + ip + "')";
+                        try {
+                            PreparedStatement ps = conn.prepareStatement(insert);
+                            ps.setString(1, address);
+                            ps.executeQuery();
+                            ps.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            error = 500;
+                            comp = false;
+                        }
+                    }
+                    String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" + claimAmount + "', '" + ip + "', '" + currency + "')";
                     try {
-                        PreparedStatement ps = conn.prepareStatement(insert);
+                        PreparedStatement ps = conn.prepareStatement(insert2);
                         ps.setString(1, address);
                         ps.executeQuery();
                         ps.close();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
+                    System.out.println(getTime() + "Faucet claim " + comp + " balance: " + WithdrawHandler.round(balance, 5) + currency
+                            + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
+                } else {
+                    comp = false;
+                    error = 3;//invalid address
                 }
-                String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" + claimAmount + "', '" + ip + "', '" + currency + "')";
-                try {
-                    PreparedStatement ps = conn.prepareStatement(insert2);
-                    ps.setString(1, address);
-                    ps.executeQuery();
-                    ps.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                System.out.println(getTime() + "Faucet claim successful balance: " + WithdrawHandler.round(balance, 5) + currency + " Claimed:" + claimAmount + " Ip: " + ip + " Address: " + address);
             } else {
                 comp = false;
+                error = 1;//5 minutes not over
             }
         } else {
             comp = false;
+            error = 2;//Wrong captcha / ip 5 minutes not over
         }
         JSONObject claimItem = new JSONObject();
         claimItem.put("success", comp);
@@ -247,8 +268,11 @@ public class ClaimHandler {
             claimItem.put("totalPaid", totalPaid);
             claimItem.put("lastClaim", lastClaim);
             claimItem.put("claimsToday", claimsToday);
-        } catch (Exception ignored){
+        } catch (Exception ignored) {
 
+        }
+        if (error != 0) {
+            claimItem.put("error", error);
         }
 
         return claimItem;
