@@ -91,7 +91,7 @@ public class Prices {
                 amount = amount * 0.1;
             }
 
-            amount = amount * 0.89;
+            //amount = amount * 0.89;
             amount = amount * 0.6;
             amount = amount * 0.75;
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
@@ -148,7 +148,7 @@ public class Prices {
             amount = amount * 0.6;
             amount = amount * 0.75;
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
-            amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
+            //amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
             amount = amount * 0.9; //16-09-2018
@@ -201,7 +201,7 @@ public class Prices {
             amount = amount * 0.6;
             amount = amount * 0.75;
             amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
-            amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
+            //amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
             amount = amount * 0.95;
             amount = amount * 0.95; //12-08-2018
             amount = amount * 0.9; //16-09-2018

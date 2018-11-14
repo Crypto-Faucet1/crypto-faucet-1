@@ -174,7 +174,7 @@ public class ClaimHandler {
                     }
                 }
                 if (fraudScore == 100) {
-                    claimAmount = claimAmount * 0.66;
+                    claimAmount = claimAmount * 0.65;
                 } else if (fraudScore >= 75) {
                     claimAmount = claimAmount * 0.80;
                 }
@@ -203,6 +203,11 @@ public class ClaimHandler {
                     }
                 }
                 if (validAddress) {
+                    JSONObject newItem = new JSONObject();
+                    newItem.put("ip", ip);
+                    newItem.put("lastClaim", date.getTime());
+                    getJsonarrayIp(currency).put(newItem);//add claim date to ip array
+
                     if (addressExists) {
                         java.util.Date dt = new java.util.Date(lastClaim);
                         java.util.Date dt2 = new java.util.Date(dailyLastClaim);
@@ -309,17 +314,11 @@ public class ClaimHandler {
             e.printStackTrace();
         }
 
+        JSONArray jsonArrayIp = getJsonarrayIp(currency);
+
         ///Double ip check
         if (comp) {
-            JSONArray jsonArrayIp = new JSONArray();
 
-            if (currency.equals("sumo")) {
-                jsonArrayIp = jsonArrayIpSumo;
-            } else if (currency.equals("ryo")) {
-                jsonArrayIp = jsonArrayIpRyo;
-            } else if (currency.equals("intense")) {
-                jsonArrayIp = jsonArrayIpIntense;
-            }
 
             int num = -1;
             long lastClaim = 0;
@@ -335,18 +334,13 @@ public class ClaimHandler {
             }
             Date date = new Date();
             long dif = date.getTime() - lastClaim;
-            if (dif >= 300000) {
+            if (dif <= 300000) {
+                System.out.println(getTime() + "Ip double claim " + ip);
+                comp = false;
+            } else {
                 if (num != -1) {
                     jsonArrayIp.remove(num);
                 }
-                lastClaim = date.getTime();
-                JSONObject newItem = new JSONObject();
-                newItem.put("ip", ip);
-                newItem.put("lastClaim", lastClaim);
-                jsonArrayIp.put(newItem);
-            } else {
-                System.out.println(getTime() + "Ip double claim " + ip);
-                comp = false;
             }
             if (currency.equals("sumo")) {
                 jsonArrayIpSumo = jsonArrayIp;
@@ -371,5 +365,16 @@ public class ClaimHandler {
         return SIMPLE_DATE_FORMAT.format(new Date()) + " - ";
     }
 
+    private JSONArray getJsonarrayIp(String currency){
+        JSONArray jsonArrayIp = new JSONArray();
 
+        if (currency.equals("sumo")) {
+            jsonArrayIp = jsonArrayIpSumo;
+        } else if (currency.equals("ryo")) {
+            jsonArrayIp = jsonArrayIpRyo;
+        } else if (currency.equals("intense")) {
+            jsonArrayIp = jsonArrayIpIntense;
+        }
+        return jsonArrayIp;
+    }
 }
