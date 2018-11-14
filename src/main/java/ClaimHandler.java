@@ -195,6 +195,12 @@ public class ClaimHandler {
                         JSONObject jsonObject = new JSONArray(result).getJSONObject(0);
                         validAddress = jsonObject.getBoolean("valid");
                     }
+                    if (currency.equals("sumo")) {
+                        String address4Ch = address.substring(0,4);
+                        if (!address4Ch.equals("Sumi") && !address4Ch.equals("Sumo") && !address4Ch.equals("Subo")) {
+                            validAddress = false;
+                        }
+                    }
                 }
                 if (validAddress) {
                     if (addressExists) {
