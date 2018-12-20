@@ -11,7 +11,6 @@ public class x {
         ClaimHandler claim = new ClaimHandler();
         GetBalance getBalance = new GetBalance();
         WithdrawHandler withdrawHandler = new WithdrawHandler();
-        RateHandler rateHandler = new RateHandler();
         SetBonusHandler setBonusHandler = new SetBonusHandler();
         new Prices();
         new Stats();
@@ -25,7 +24,7 @@ public class x {
 
         post("/claim", claim::claim);
         path("/claim", () -> {
-            post("/v2", claim::claimV2);
+            post("/v2", claim::claim);
         });
         get("/addressInfo", getBalance::getAddressInfo);
         path("/withdraw", () -> {
@@ -33,7 +32,6 @@ public class x {
             post("/remove", withdrawHandler::removeBalance);
             post("/proccess", Payments::startProccessPayment);
         });
-        get("/rate", RateHandler::getClaimRate);
         post("/setbonus", setBonusHandler::setBonus);
         get("/payments", Payments::getPayments);
     }

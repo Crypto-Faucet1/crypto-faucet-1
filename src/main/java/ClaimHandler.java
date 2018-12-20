@@ -16,6 +16,7 @@ public class ClaimHandler {
     private JSONArray jsonArrayIpSumo = new JSONArray();
     private JSONArray jsonArrayIpRyo = new JSONArray();
     private JSONArray jsonArrayIpIntense = new JSONArray();
+    private JSONArray jsonArrayIpMasari = new JSONArray();
 
     ClaimHandler() {
         try {
@@ -48,16 +49,6 @@ public class ClaimHandler {
         String ip = request.queryParams("ip");
         String currency = request.queryParams("currency");
         String userAgent = request.queryParamOrDefault("user-agent", "no");
-        JSONObject jsonObject = claim(address, captcha, ip, currency, userAgent);
-        return jsonObject.getBoolean("success") + "";
-    }
-
-    String claimV2(Request request, Response response) {
-        String captcha = request.queryParams("captcha");
-        String address = request.queryParams("address").replaceAll("\\s+", "");
-        String ip = request.queryParams("ip");
-        String currency = request.queryParams("currency");
-        String userAgent = request.queryParamOrDefault("user-agent", "no");
         return claim(address, captcha, ip, currency, userAgent).toString();
     }
 
@@ -69,6 +60,8 @@ public class ClaimHandler {
             table = "ryo";
         } else if (currency.equals("intense")) {
             table = "intense";
+        } else if (currency.equals("masari")){
+            table = "masari";
         }
         return table;
     }
@@ -160,17 +153,17 @@ public class ClaimHandler {
                     payout = true;
                 }
                 claimAmount = Prices.getClaimAmount(claimsToday, currency);
-                if (currency.equals("sumo") || currency.equals("ryo")) {
+                if (currency.equals("sumo") || currency.equals("ryo") || currency.equals("masari")) {
                     if (balance >= 0.3) {
-                        claimAmount = claimAmount * 0.6;
+                        claimAmount = claimAmount * 0.65;
                     } else if (balance > 0.12) {
-                        claimAmount = claimAmount * 0.85;
+                        claimAmount = claimAmount * 0.95;
                     }
                 } else if (currency.equals("intense")) {
                     if (balance > 45) {
                         claimAmount = claimAmount * 0.6;
                     } else if (balance > 15) {
-                        claimAmount = claimAmount * 0.85;
+                        claimAmount = claimAmount * 0.9;
                     }
                 }
                 if (fraudScore == 100) {
@@ -348,6 +341,8 @@ public class ClaimHandler {
                 jsonArrayIpRyo = jsonArrayIp;
             } else if (currency.equals("intense")) {
                 jsonArrayIpIntense = jsonArrayIp;
+            } else if (currency.equals("masari")){
+                jsonArrayIpMasari = jsonArrayIp;
             }
             /*
             try {
@@ -374,6 +369,8 @@ public class ClaimHandler {
             jsonArrayIp = jsonArrayIpRyo;
         } else if (currency.equals("intense")) {
             jsonArrayIp = jsonArrayIpIntense;
+        } else if (currency.equals("masari")){
+            jsonArrayIp = jsonArrayIpMasari;
         }
         return jsonArrayIp;
     }

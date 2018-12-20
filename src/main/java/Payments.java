@@ -76,6 +76,13 @@ public class Payments {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else if(request.queryParams("currency").equals("masari")){
+            try {
+                System.out.println("Processing masari payments");
+                proccessPayments("masari");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return "";
     }
@@ -102,7 +109,11 @@ public class Payments {
                         rs.getString("address").substring(0, 2).equals("Na")) {
                     if(new Date().getTime() - payoutDayReached > 475200000) {
                         balance = balance - 0.015;
-                        item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(balance, 5) * 1000000000)));
+                        double ma = balance;
+                        if (currency.equals("masari")){
+                            ma = balance * 1000;
+                        }
+                        item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(ma, 5) * 1000000000)));
                         intAddress.put(item);
                     }
                 } else {
@@ -113,7 +124,11 @@ public class Payments {
                         lastTime = payoutDayReached;
                     }
                     DecimalFormat decimalFormat = new DecimalFormat("0");
-                    double ase = WithdrawHandler.round(balance, 2) * 1000000000;
+                    double ma = balance;
+                    if (currency.equals("masari")){
+                        ma = balance * 1000;
+                    }
+                    double ase = WithdrawHandler.round(ma, 2) * 1000000000;
                     item.put("amount", decimalFormat.format(ase));
                     jsonArray.put(item);
                 }
@@ -212,8 +227,12 @@ public class Payments {
             double amount = 0;
             for (int i = 0; i < recipients.length(); i++) {
                 JSONObject jsonObject1 = recipients.getJSONObject(i);
-                removeBalance(currency, jsonObject1.getString("address"), jsonObject1.getDouble("amount") / 1000000000);
-                amount = amount + jsonObject1.getDouble("amount") / 1000000000;
+                double am = jsonObject1.getDouble("amount");
+                if (currency.equals("masari")){
+                    am = am / 1000;
+                }
+                removeBalance(currency, jsonObject1.getString("address"), am / 1000000000);
+                amount = amount + am / 1000000000;
             }
             PaymentItem item = new PaymentItem(txHash, new Date().getTime(), txKey, amount, recipients, currency);
             addPayment(item);
@@ -274,6 +293,8 @@ public class Payments {
             url = "http://127.0.0.1:8889/json_rpc";
         } else if (currency.equals("intense")){
             url = "http://192.168.2.26:4878/json_rpc";
+        } else if (currency.equals("masari")){
+            url = "http://127.0.0.1:8887/json_rpc";
         }
         String cont = "";
 
