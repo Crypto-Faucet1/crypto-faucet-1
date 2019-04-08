@@ -4,6 +4,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class IpHub {
     static List<IpqItem> ipqList = new ArrayList<>();
@@ -36,7 +37,9 @@ public class IpHub {
     public static IpqItem checkIpQuality(String ip, String userAgent) {
         IpqItem item = null;
         int fraudScore = -1;
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .build();
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://www.ipqualityscore.com/api/json/ip/NmYNOj530bGr0GtZJYRr4WdgTquoJfhm/" + ip + "?strictness=1&user_agent=" + userAgent).newBuilder();
         String url = urlBuilder.build().toString();

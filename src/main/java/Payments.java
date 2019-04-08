@@ -14,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.DecimalFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Timer;
@@ -49,37 +48,66 @@ public class Payments {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    System.out.println("Processing masari payments");
+                    proccessPayments("masari");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    System.out.println("Processing intense payments");
+                    proccessPayments("intense");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
             t.start();
         }
     }
 
-    static String startProccessPayment(Request request, Response response){
-        if(request.queryParams("currency").equals("sumo")){
+    static String startProccessPayment(Request request, Response response) {
+        if (request.queryParams("currency").equals("sumo")) {
             try {
                 System.out.println("Processing Sumo payments");
                 proccessPayments("sumo");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else if(request.queryParams("currency").equals("ryo")){
+        } else if (request.queryParams("currency").equals("ryo")) {
             try {
                 System.out.println("Processing Ryo payments");
                 proccessPayments("ryo");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else if(request.queryParams("currency").equals("intense")){
+        } else if (request.queryParams("currency").equals("intense")) {
             try {
                 System.out.println("Processing intense payments");
                 proccessPayments("intense");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else if(request.queryParams("currency").equals("masari")){
+        } else if (request.queryParams("currency").equals("masari")) {
             try {
                 System.out.println("Processing masari payments");
                 proccessPayments("masari");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if (request.queryParams("currency").equals("loki")) {
+            try {
+                System.out.println("Processing loki payments");
+                proccessPayments("loki");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -102,34 +130,42 @@ public class Payments {
                 long payoutDayReached = 0;
                 try {
                     payoutDayReached = rs.getTimestamp("payoutDayReached").getTime();
-                } catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
+                boolean masariIntAdr = false;
+                if (currency.equals("masari")) {
+                    masariIntAdr = intAdrPostRequest(rs.getString("address"));
+                }
                 if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN") ||
-                        rs.getString("address").substring(0, 2).equals("Na")) {
-                    if(new Date().getTime() - payoutDayReached > 475200000) {
+                        rs.getString("address").substring(0, 2).equals("Na") || masariIntAdr) {
+                    if (new Date().getTime() - payoutDayReached > 475200000) {
                         balance = balance - 0.015;
                         double ma = balance;
-                        if (currency.equals("masari")){
+                        if (currency.equals("masari")) {
                             ma = balance * 1000;
+                        } else if (currency.equals("intense")) {
+                            ma = balance / 10;
                         }
-                        item.put("amount", Integer.parseInt(String.format("%.0f", WithdrawHandler.round(ma, 5) * 1000000000)));
+                        double ase = WithdrawHandler.round(ma, 2) * 1000000000;
+                        item.put("amount", Math.round(ase));
                         intAddress.put(item);
                     }
                 } else {
                     if (lastTime == 0) {
                         lastTime = payoutDayReached;
                     }
-                    if (payoutDayReached < lastTime){
+                    if (payoutDayReached < lastTime) {
                         lastTime = payoutDayReached;
                     }
-                    DecimalFormat decimalFormat = new DecimalFormat("0");
                     double ma = balance;
-                    if (currency.equals("masari")){
+                    if (currency.equals("masari")) {
                         ma = balance * 1000;
+                    } else if (currency.equals("intense")) {
+                        ma = balance / 10;
                     }
                     double ase = WithdrawHandler.round(ma, 2) * 1000000000;
-                    item.put("amount", decimalFormat.format(ase));
+                    item.put("amount", Math.round(ase));
                     jsonArray.put(item);
                 }
             }
@@ -137,8 +173,7 @@ public class Payments {
             e.printStackTrace();
         }
         long diff = new Date().getTime() - lastTime;
-        System.out.println("Diff: " + diff);
-        if (jsonArray.length() >= 5 || diff > 475200000 && jsonArray.length() > 0) {
+        if (jsonArray.length() >= 6 || diff > 475200000 && jsonArray.length() > 0) {
             makePayment(jsonArray, currency);
         } else {
             if (intAddress.length() > 0) {
@@ -228,8 +263,10 @@ public class Payments {
             for (int i = 0; i < recipients.length(); i++) {
                 JSONObject jsonObject1 = recipients.getJSONObject(i);
                 double am = jsonObject1.getDouble("amount");
-                if (currency.equals("masari")){
+                if (currency.equals("masari")) {
                     am = am / 1000;
+                } else if (currency.equals("intense")) {
+                    am = am * 10;
                 }
                 removeBalance(currency, jsonObject1.getString("address"), am / 1000000000);
                 amount = amount + am / 1000000000;
@@ -288,20 +325,25 @@ public class Payments {
     static String sendPostRequest(JSONArray recipients, String currency) throws IOException {
         String url = "";
         if (currency.equals("sumo")) {
-            url = "http://127.0.0.1:8888/json_rpc";
+            url = "https://vps.altfaucet.xyz/sumo/json_rpc";
         } else if (currency.equals("ryo")) {
-            url = "http://127.0.0.1:8889/json_rpc";
-        } else if (currency.equals("intense")){
-            url = "http://192.168.2.26:4878/json_rpc";
-        } else if (currency.equals("masari")){
-            url = "http://127.0.0.1:8887/json_rpc";
+            url = "https://vps.altfaucet.xyz/ryo/json_rpc";
+        } else if (currency.equals("intense")) {
+            url = "https://vps.altfaucet.xyz/intense/json_rpc";
+        } else if (currency.equals("masari")) {
+            url = "https://vps.altfaucet.xyz/masari/json_rpc";
+        } else if (currency.equals("loki")) {
+            url = "https://vps.altfaucet.xyz/loki/json_rpc";
         }
         String cont = "";
 
+        String asydfuh = "";
+        if (currency.equals("intense")) {
+            asydfuh = ",\"mixin\":10";
+        }
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"transfer\",\"params\":{\"destinations\":" +
                 recipients
-                + ",\"get_tx_key\": true}}";
-        System.out.println(urlParameters);
+                + ",\"account_index\":0,\"subaddr_indices\":[0],\"priority\":0,\"get_tx_key\":true" + asydfuh + "}}";
         byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
         try {
@@ -313,9 +355,8 @@ public class Payments {
             con.setRequestMethod("POST");
             con.setRequestProperty("User-Agent", "Java client");
             con.setRequestProperty("Content-Type", "application/json");
-            String userpass = "ryoWallet:sdfghruhvk";
-            String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
-            con.setRequestProperty("Authorization", basicAuth);
+            String encoding = Base64.getEncoder().encodeToString(("koen:UZuvPkNm&Ex2U0132anpZJSejy").getBytes());
+            con.setRequestProperty("Authorization", "Basic " + encoding);
 
             try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
                 wr.write(postData);
@@ -340,5 +381,57 @@ public class Payments {
             con.disconnect();
         }
         return cont;
+    }
+
+    static boolean intAdrPostRequest(String address) {
+        String cont = "";
+        boolean isIntAddress = false;
+        String url = "https://vps.altfaucet.xyz/masari/json_rpc";
+        String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"split_integrated_address\",\"params\"" +
+                ":{\"integrated_address\": \"" + address + "\"}}' " +
+                "-H 'Content-Type: application/json";
+        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+        try {
+            try {
+
+                URL myurl = new URL(url);
+                con = (HttpURLConnection) myurl.openConnection();
+
+                con.setDoOutput(true);
+                con.setRequestMethod("POST");
+                con.setRequestProperty("User-Agent", "Java client");
+                con.setRequestProperty("Content-Type", "application/json");
+                String encoding = Base64.getEncoder().encodeToString(("koen:UZuvPkNm&Ex2U0132anpZJSejy").getBytes());
+                con.setRequestProperty("Authorization", "Basic " + encoding);
+                try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+                    wr.write(postData);
+                }
+                StringBuilder content;
+
+                try (BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()))) {
+                    String line;
+                    content = new StringBuilder();
+
+                    while ((line = in.readLine()) != null) {
+                        content.append(line);
+                        content.append(System.lineSeparator());
+                    }
+                }
+                cont = content.toString();
+                JSONObject jsonObject = new JSONObject(cont);
+                if (jsonObject.has("result")) {
+                    System.out.println("is intaddress");
+                    isIntAddress = true;
+                }
+            } finally {
+
+                con.disconnect();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return isIntAddress;
     }
 }

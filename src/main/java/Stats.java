@@ -16,7 +16,9 @@ public class Stats {
             int sumo = timesClaimedToday("sumo", time);
             int ryo = timesClaimedToday("ryo", time);
             int intense = timesClaimedToday("intense", time);
-            StatsItem item = new StatsItem(getCurrentTime(), sumo, ryo, intense);
+            int masari = timesClaimedToday("masari", time);
+            int loki = timesClaimedToday("loki", time);
+            StatsItem item = new StatsItem(getCurrentTime(), sumo, ryo, intense, masari, loki);
             insertInDb(item);
 
             IpHub.ipqList = new ArrayList<>();
@@ -27,7 +29,8 @@ public class Stats {
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
             stmt.executeUpdate("INSERT INTO stats VALUES ('" + item.getDate() + "', '" + item.getSumoClaimsToday()
-                    + "', '" + item.getRyoClaimsToday() + "', '" + item.getIntenseClaimsToday() + "')");
+                    + "', '" + item.getRyoClaimsToday() + "', '" + item.getIntenseClaimsToday() + "', '"
+                    + item.getMasariClaimsToday() + "', '" + item.getLokiClaimsToday() +"')");
             stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();

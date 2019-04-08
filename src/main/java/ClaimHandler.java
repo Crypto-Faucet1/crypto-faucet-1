@@ -17,10 +17,11 @@ public class ClaimHandler {
     private JSONArray jsonArrayIpRyo = new JSONArray();
     private JSONArray jsonArrayIpIntense = new JSONArray();
     private JSONArray jsonArrayIpMasari = new JSONArray();
+    private JSONArray jsonArrayIpLoki = new JSONArray();
 
     ClaimHandler() {
         try {
-            conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+            conn = DriverManager.getConnection("jdbc:mariadb://127.0.0.1:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -35,7 +36,7 @@ public class ClaimHandler {
             try {
                 if (!conn.isValid(2500)) {
                     conn.close();
-                    conn = DriverManager.getConnection("jdbc:mariadb://192.168.2.24:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+                    conn = DriverManager.getConnection("jdbc:mariadb://127.0.0.1:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -60,8 +61,10 @@ public class ClaimHandler {
             table = "ryo";
         } else if (currency.equals("intense")) {
             table = "intense";
-        } else if (currency.equals("masari")){
+        } else if (currency.equals("masari")) {
             table = "masari";
+        } else if (currency.equals("loki")) {
+            table = "loki";
         }
         return table;
     }
@@ -89,6 +92,7 @@ public class ClaimHandler {
                     System.out.println("Fraud score: " + fraudScore);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    IpHub.ipqList = new ArrayList<>();
                 }
             }
 
@@ -133,9 +137,9 @@ public class ClaimHandler {
                 if (dif2 >= 43200000 && dif2 <= 172800000 && lastBonusDay != day) {
                     if (dailyBonus < 0.99) {
                         dailyBonus = dailyBonus + 0.01;
-                        lastBonusDay = day;
-                        dailyLastClaim = date.getTime();
                     }
+                    lastBonusDay = day;
+                    dailyLastClaim = date.getTime();
                 } else if (dif2 >= 172800000 || dif2 < -1) {
                     dailyBonus = 0;
                     dailyLastClaim = date.getTime();
@@ -153,9 +157,9 @@ public class ClaimHandler {
                     payout = true;
                 }
                 claimAmount = Prices.getClaimAmount(claimsToday, currency);
-                if (currency.equals("sumo") || currency.equals("ryo") || currency.equals("masari")) {
+                if (currency.equals("sumo") || currency.equals("ryo") || currency.equals("masari") || currency.equals("loki")) {
                     if (balance >= 0.3) {
-                        claimAmount = claimAmount * 0.65;
+                        claimAmount = claimAmount * 0.7;
                     } else if (balance > 0.12) {
                         claimAmount = claimAmount * 0.95;
                     }
@@ -183,13 +187,13 @@ public class ClaimHandler {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 boolean validAddress = true;
                 if (!addressExists) {
-                    if (currency.equals("ryo")) {
+                    /*if (currency.equals("ryo")) {
                         String result = ExecuteShellCommand.executeCommand("/home/pi/ryo-wallet/ryo-address-validator " + address);
                         JSONObject jsonObject = new JSONArray(result).getJSONObject(0);
                         validAddress = jsonObject.getBoolean("valid");
-                    }
+                    }*/
                     if (currency.equals("sumo")) {
-                        String address4Ch = address.substring(0,4);
+                        String address4Ch = address.substring(0, 4);
                         if (!address4Ch.equals("Sumi") && !address4Ch.equals("Sumo") && !address4Ch.equals("Subo")) {
                             validAddress = false;
                         }
@@ -341,8 +345,10 @@ public class ClaimHandler {
                 jsonArrayIpRyo = jsonArrayIp;
             } else if (currency.equals("intense")) {
                 jsonArrayIpIntense = jsonArrayIp;
-            } else if (currency.equals("masari")){
+            } else if (currency.equals("masari")) {
                 jsonArrayIpMasari = jsonArrayIp;
+            } else if (currency.equals("loki")) {
+                jsonArrayIpLoki = jsonArrayIp;
             }
             /*
             try {
@@ -360,7 +366,7 @@ public class ClaimHandler {
         return SIMPLE_DATE_FORMAT.format(new Date()) + " - ";
     }
 
-    private JSONArray getJsonarrayIp(String currency){
+    private JSONArray getJsonarrayIp(String currency) {
         JSONArray jsonArrayIp = new JSONArray();
 
         if (currency.equals("sumo")) {
@@ -369,8 +375,10 @@ public class ClaimHandler {
             jsonArrayIp = jsonArrayIpRyo;
         } else if (currency.equals("intense")) {
             jsonArrayIp = jsonArrayIpIntense;
-        } else if (currency.equals("masari")){
+        } else if (currency.equals("masari")) {
             jsonArrayIp = jsonArrayIpMasari;
+        } else if (currency.equals("loki")) {
+            jsonArrayIp = jsonArrayIpLoki;
         }
         return jsonArrayIp;
     }

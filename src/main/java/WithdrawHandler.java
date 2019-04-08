@@ -15,7 +15,7 @@ public class WithdrawHandler {
         String address = request.queryParams("address");
         double balanceRemove = Double.parseDouble(request.queryParams("balanceRemove"));
         String currency = request.queryParams("currency");
-        if(!Payments.removeBalance(currency, address, balanceRemove)){
+        if (!Payments.removeBalance(currency, address, balanceRemove)) {
             res = "Failed";
         }
         return res;
@@ -60,14 +60,18 @@ public class WithdrawHandler {
         return bd.doubleValue();
     }
 
-    public static double getWithdrawLimit(String currency){
+    public static double getWithdrawLimit(String currency) {
         double limit = 0;
         if (currency.equals("sumo")) {
             limit = 0.1;
         } else if (currency.equals("ryo")) {
             limit = 0.1;
-        } else if (currency.equals("intense")){
+        } else if (currency.equals("intense")) {
             limit = 10;
+        } else if (currency.equals("masari")) {
+            limit = 0.1;
+        } else if (currency.equals("loki")){
+            limit = 0.1;
         }
         return limit;
     }
