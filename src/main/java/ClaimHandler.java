@@ -1,5 +1,7 @@
+import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
@@ -291,11 +293,11 @@ public class ClaimHandler {
         ///recaptcha
         OkHttpClient client = new OkHttpClient();
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://www.google.com/recaptcha/api/siteverify").newBuilder();
-        urlBuilder.addQueryParameter("secret", "6LfWYTwUAAAAAFcjH1RNrVV8WkW8rSy3nwzPSVZn");
-        urlBuilder.addQueryParameter("response", captcha);
-        urlBuilder.addQueryParameter("remoteip", ip);
-        String url = urlBuilder.build().toString();
+            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://www.google.com/recaptcha/api/siteverify").newBuilder();
+            urlBuilder.addQueryParameter("secret", "6LfWYTwUAAAAAFcjH1RNrVV8WkW8rSy3nwzPSVZn");
+            urlBuilder.addQueryParameter("response", captcha);
+            urlBuilder.addQueryParameter("remoteip", ip);
+            String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(url)
@@ -312,11 +314,8 @@ public class ClaimHandler {
         }
 
         JSONArray jsonArrayIp = getJsonarrayIp(currency);
-
         ///Double ip check
         if (comp) {
-
-
             int num = -1;
             long lastClaim = 0;
             for (int i = 0; i < jsonArrayIp.length(); i++) {

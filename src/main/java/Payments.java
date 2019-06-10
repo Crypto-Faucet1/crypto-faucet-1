@@ -70,6 +70,12 @@ public class Payments {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                try {
+                    System.out.println("Processing loki payments");
+                    proccessPayments("loki");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
             t.start();
         }
@@ -134,8 +140,8 @@ public class Payments {
                     e.printStackTrace();
                 }
                 boolean masariIntAdr = false;
-                if (currency.equals("masari")) {
-                    masariIntAdr = intAdrPostRequest(rs.getString("address"));
+                if (currency.equals("masari") || currency.equals("loki")) {
+                    masariIntAdr = intAdrPostRequest(rs.getString("address"), currency);
                 }
                 if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN") ||
                         rs.getString("address").substring(0, 2).equals("Na") || masariIntAdr) {
@@ -325,7 +331,7 @@ public class Payments {
     static String sendPostRequest(JSONArray recipients, String currency) throws IOException {
         String url = "";
         if (currency.equals("sumo")) {
-            url = "https://vps.altfaucet.xyz/sumo/json_rpc";
+            url = "http://127.0.0.1:19733/json_rpc";
         } else if (currency.equals("ryo")) {
             url = "https://vps.altfaucet.xyz/ryo/json_rpc";
         } else if (currency.equals("intense")) {
@@ -383,10 +389,10 @@ public class Payments {
         return cont;
     }
 
-    static boolean intAdrPostRequest(String address) {
+    static boolean intAdrPostRequest(String address, String currency) {
         String cont = "";
         boolean isIntAddress = false;
-        String url = "https://vps.altfaucet.xyz/masari/json_rpc";
+        String url = "https://vps.altfaucet.xyz/" + currency + "/json_rpc";
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"split_integrated_address\",\"params\"" +
                 ":{\"integrated_address\": \"" + address + "\"}}' " +
                 "-H 'Content-Type: application/json";

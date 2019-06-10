@@ -12,6 +12,7 @@ public class x {
         GetBalance getBalance = new GetBalance();
         WithdrawHandler withdrawHandler = new WithdrawHandler();
         SetBonusHandler setBonusHandler = new SetBonusHandler();
+        Mouse mouse = new Mouse();
         new Prices();
         new Stats();
         new IpHub();
@@ -34,5 +35,7 @@ public class x {
         });
         post("/setbonus", setBonusHandler::setBonus);
         get("/payments", Payments::getPayments);
+        post("/mouseAdd", mouse::addSession);
+        get("/mouse", mouse::getSession);
     }
 }

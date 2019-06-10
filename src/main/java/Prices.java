@@ -88,6 +88,7 @@ public class Prices {
             amount = amount * 0.95; //12-08-2018
             amount = amount * 0.6; //23-09-2018
             amount = amount * 0.9;
+            amount = amount * 0.8;
 
             amount = removeRateChangeAmount(sumoChange7d, amount);
         } else if (currency.equals("ryo")) {//////////////////////////////////////////////
@@ -114,6 +115,7 @@ public class Prices {
             amount = amount * 0.6;
             amount = amount * 0.6; //23-09-2018
             amount = amount * 0.65; //25-09-2018
+            amount = amount * 0.78;
 
             amount = removeRateChangeAmount(intenseChange7d, amount);
         } else if (currency.equals("masari")) {//////////////////////////////////////////////
@@ -125,7 +127,7 @@ public class Prices {
 
             amount = amount * 0.9;
             amount = amount * 0.6; //23-09-2018
-            amount = amount * 0.65; //25-09-2018
+            amount = amount * 0.9;
 
             amount = removeRateChangeAmount(masariChange7d, amount);
         } else if (currency.equals("loki")) {//////////////////////////////////////////////
@@ -134,10 +136,10 @@ public class Prices {
             amount = removeClaimsAmount(amount, claimsToday);
             amount = amount * 0.9;
             amount = amount * 0.6;
-            amount = amount * 0.65;
 
             amount = removeRateChangeAmount(lokiChange7d, amount);
         }
+        amount = amount * 0.95;
         if (claimsToday == 1) {
             amount = amount * 3;
         }
@@ -153,10 +155,10 @@ public class Prices {
             amount = 0.00000007 / rate;
         } else if (value <= 91) {
             amount = 0.00000015 / rate;
-        } else if (value <= 97) {
-            amount = 0.00000270 / rate;
+        } else if (value <= 98) {
+            amount = 0.00000260 / rate;
         } else if (value <= 100) {
-            amount = 0.00000590 / rate;
+            amount = 0.00000560 / rate;
         }
         return amount;
     }
@@ -168,8 +170,8 @@ public class Prices {
             amount = amount * 0.6;
         } else if (change7d <= -20) {
             amount = amount * 0.7;
-        } else if (change7d <= -10 && change7d <= -5) {
-            amount = amount * 0.8;
+        } else if (change7d <= -10) {
+            amount = amount * 0.85;
         }
         return amount;
     }
