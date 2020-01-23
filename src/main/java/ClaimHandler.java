@@ -7,6 +7,8 @@ import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -86,6 +88,7 @@ public class ClaimHandler {
         int lastBonusDay = 0;
         long payoutDayReached = 0;
         int error = 0;
+        boolean paymentPending = false;
 
         if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
             if (!userAgent.equals("no")) {
@@ -118,6 +121,7 @@ public class ClaimHandler {
                     claimsToday = resultSet.getInt(9);
                     lastBonusDay = resultSet.getInt(10);
                     payoutDayReached = resultSet.getTimestamp(11).getTime();
+                    paymentPending = resultSet.getBoolean("payment");
                     addressExists = true;
                 }
             } catch (SQLException e) {
@@ -194,12 +198,13 @@ public class ClaimHandler {
                         JSONObject jsonObject = new JSONArray(result).getJSONObject(0);
                         validAddress = jsonObject.getBoolean("valid");
                     }*/
-                    if (currency.equals("sumo")) {
+                    /*if (currency.equals("sumo")) {
                         String address4Ch = address.substring(0, 4);
                         if (!address4Ch.equals("Sumi") && !address4Ch.equals("Sumo") && !address4Ch.equals("Subo")) {
                             validAddress = false;
                         }
-                    }
+                    }*/
+                    validAddress = ValidateAddress.validateAddress(address, currency);
                 }
                 if (validAddress) {
                     JSONObject newItem = new JSONObject();
@@ -213,8 +218,8 @@ public class ClaimHandler {
                         String currentTime = sdf.format(dt);
                         String currentTime2 = sdf.format(dt2);
 
-                        String insert = "UPDATE " + table + " SET balance='" + balance + "', lastClaim='" + currentTime
-                                + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + dailyBonus + "', claims='" + claims + "', totalPaid='" + totalPaid +
+                        String insert = "UPDATE " + table + " SET balance='" + round(balance, 6) + "', lastClaim='" + currentTime
+                                + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + round(dailyBonus, 2) + "', claims='" + claims + "', totalPaid='" + totalPaid +
                                 "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
                                 + Payments.getTimeString(payoutDayReached) + "', ip='" + ip + "' WHERE address=?";
                         try {
@@ -233,9 +238,9 @@ public class ClaimHandler {
                         String currentTime = sdf.format(dt);
                         String currentTime2 = sdf.format(dt2);
 
-                        String insert = "INSERT INTO " + table + " VALUES (?, '" + balance + "', '" + currentTime
+                        String insert = "INSERT INTO " + table + " VALUES (?, '" + round(balance, 6) + "', '" + currentTime
                                 + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
-                                + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', '" + ip + "')";
+                                + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', '" + ip + "', 0)";
                         try {
                             PreparedStatement ps = conn.prepareStatement(insert);
                             ps.setString(1, address);
@@ -278,6 +283,8 @@ public class ClaimHandler {
             claimItem.put("totalPaid", totalPaid);
             claimItem.put("lastClaim", lastClaim);
             claimItem.put("claimsToday", claimsToday);
+            claimItem.put("payoutDayReached", payoutDayReached);
+            claimItem.put("paymentPending", paymentPending);
         } catch (Exception ignored) {
 
         }
@@ -380,5 +387,13 @@ public class ClaimHandler {
             jsonArrayIp = jsonArrayIpLoki;
         }
         return jsonArrayIp;
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }

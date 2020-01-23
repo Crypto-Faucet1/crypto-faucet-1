@@ -35,6 +35,7 @@ public class x {
         });
         post("/setbonus", setBonusHandler::setBonus);
         get("/payments", Payments::getPayments);
+        post("/request", Payments::requestPayment);
         post("/mouseAdd", mouse::addSession);
         get("/mouse", mouse::getSession);
     }

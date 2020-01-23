@@ -128,7 +128,9 @@ public class Payments {
         long lastTime = 0;
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > " + WithdrawHandler.getWithdrawLimit(currency));
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > " + WithdrawHandler.getWithdrawLimit(currency) + " AND payment = 1");
+
             while (rs.next()) {
                 JSONObject item = new JSONObject();
                 double balance = rs.getDouble("balance");
@@ -143,9 +145,12 @@ public class Payments {
                 if (currency.equals("masari") || currency.equals("loki")) {
                     masariIntAdr = intAdrPostRequest(rs.getString("address"), currency);
                 }
+                if (currency.equals("loki")) {
+                    balance = balance - 0.04;
+                }
                 if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN") ||
                         rs.getString("address").substring(0, 2).equals("Na") || masariIntAdr) {
-                    if (new Date().getTime() - payoutDayReached > 475200000) {
+                    if (new Date().getTime() - payoutDayReached > 86400000) {
                         balance = balance - 0.015;
                         double ma = balance;
                         if (currency.equals("masari")) {
@@ -179,9 +184,16 @@ public class Payments {
             e.printStackTrace();
         }
         long diff = new Date().getTime() - lastTime;
-        if (jsonArray.length() >= 6 || diff > 475200000 && jsonArray.length() > 0) {
+
+        long normalTime = 345600000;
+        if (currency.equals("intense") || currency.equals("masari")) {
+            normalTime = 0;
+        }
+
+        //payments for normal/sub addresses
+        if (jsonArray.length() >= 3 || diff > normalTime && jsonArray.length() > 0) {
             makePayment(jsonArray, currency);
-        } else {
+        } else { //Payments for integrated addresses.
             if (intAddress.length() > 0) {
                 JSONArray jsonArray1 = new JSONArray();
                 JSONObject jsonObject = intAddress.getJSONObject(0);
@@ -189,6 +201,43 @@ public class Payments {
                 makePayment(jsonArray1, currency);
             }
         }
+    }
+
+    static String requestPayment(Request request, Response response) {
+        String res = "";
+        String address = request.queryParams("address");
+        String currency = request.queryParams("currency");
+        String table = ClaimHandler.getTable(currency);
+        double balance = 0;
+        boolean paymentPending = false;
+        String queryCheck = "SELECT * from " + table + " WHERE address = ?";
+        try {
+            PreparedStatement ps = ClaimHandler.conn.prepareStatement(queryCheck);
+            ps.setString(1, address);
+            final ResultSet resultSet = ps.executeQuery();
+            ps.close();
+
+            if (resultSet.next()) {
+                balance = resultSet.getDouble(2);
+                paymentPending = resultSet.getBoolean("payment");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (balance > WithdrawHandler.getWithdrawLimit(currency) && !paymentPending) {
+            Date date = new Date();
+            String insert = "UPDATE " + table + " SET payoutDayReached='"
+                    + Payments.getTimeString(date.getTime()) + "', payment=1 WHERE address=?";
+            try {
+                PreparedStatement ps = ClaimHandler.conn.prepareStatement(insert);
+                ps.setString(1, address);
+                ps.executeUpdate();
+                ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return res;
     }
 
     static String getPayments(Request request, Response response) {
@@ -213,6 +262,9 @@ public class Payments {
     }
 
     static boolean removeBalance(String currency, String address, Double balanceRemove) {
+        if (currency.equals("loki")) {
+            balanceRemove = balanceRemove + 0.04;
+        }
         System.out.println("Removing balance: " + balanceRemove);
         boolean res = true;
         String table = ClaimHandler.getTable(currency);
@@ -229,7 +281,7 @@ public class Payments {
             rs.close();
             balance = balance - balanceRemove;
             totalPaid = totalPaid + balanceRemove;
-            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE " + table + " SET balance=" + balance + ", totalPaid=" + totalPaid + " WHERE address = ?");
+            PreparedStatement ps2 = ClaimHandler.conn.prepareStatement("UPDATE " + table + " SET balance=" + balance + ", totalPaid=" + totalPaid + ", payment=0 WHERE address = ?");
             ps2.setString(1, address);
             ps2.executeUpdate();
             ps.close();
@@ -331,15 +383,15 @@ public class Payments {
     static String sendPostRequest(JSONArray recipients, String currency) throws IOException {
         String url = "";
         if (currency.equals("sumo")) {
-            url = "http://127.0.0.1:19733/json_rpc";
+            url = "https://server.koenhabets.nl/sumo/json_rpc";
         } else if (currency.equals("ryo")) {
-            url = "https://vps.altfaucet.xyz/ryo/json_rpc";
+            url = "http://127.0.0.1:8889/json_rpc";
         } else if (currency.equals("intense")) {
-            url = "https://vps.altfaucet.xyz/intense/json_rpc";
+            url = "http://127.0.0.1:4878/json_rpc";
         } else if (currency.equals("masari")) {
-            url = "https://vps.altfaucet.xyz/masari/json_rpc";
+            url = "http://127.0.0.1:8887/json_rpc";
         } else if (currency.equals("loki")) {
-            url = "https://vps.altfaucet.xyz/loki/json_rpc";
+            url = "https://server.koenhabets.nl/loki/json_rpc";
         }
         String cont = "";
 
@@ -392,7 +444,18 @@ public class Payments {
     static boolean intAdrPostRequest(String address, String currency) {
         String cont = "";
         boolean isIntAddress = false;
-        String url = "https://vps.altfaucet.xyz/" + currency + "/json_rpc";
+        String url = "https://server.koenhabets.nl/" + currency + "/json_rpc";
+        if (currency.equals("sumo")) {
+            url = "https://server.koenhabets.nl/sumo/json_rpc";
+        } else if (currency.equals("ryo")) {
+            url = "http://127.0.0.1:8889/json_rpc";
+        } else if (currency.equals("intense")) {
+            url = "http://127.0.0.1:4878/json_rpc";
+        } else if (currency.equals("masari")) {
+            url = "http://127.0.0.1:8887/json_rpc";
+        } else if (currency.equals("loki")) {
+            url = "https://server.koenhabets.nl/loki/json_rpc";
+        }
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"split_integrated_address\",\"params\"" +
                 ":{\"integrated_address\": \"" + address + "\"}}' " +
                 "-H 'Content-Type: application/json";

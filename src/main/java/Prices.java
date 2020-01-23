@@ -10,11 +10,11 @@ import java.util.TimerTask;
 
 public class Prices {
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-dd-MM HH:mm:ss");
-    static double sumoRate = 0.00001237;
-    static double ryoRate = 0.00001904;
-    static double intenseRate = 0.00000039;
-    static double masariRate = 0.00003874;
-    static double lokiRate = 0.0003463;
+    static double sumoRate = 0.03;
+    static double ryoRate = 0.03;
+    static double intenseRate = 0.00078;
+    static double masariRate = 0.03;
+    static double lokiRate = 0.10;
     static double sumoChange7d = 0.0;
     static double ryoChange7d = 0.0;
     static double intenseChange7d = 0.0;
@@ -37,7 +37,7 @@ public class Prices {
         OkHttpClient client = new OkHttpClient();
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest" +
-                "?symbol=SUMO,RYO,LTHN,MSR,LOKI&convert=BTC&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
+                "?symbol=SUMO,RYO,LTHN,MSR,LOKI&convert=EUR&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -46,11 +46,11 @@ public class Prices {
         try {
             okhttp3.Response response = client.newCall(request).execute();
             JSONObject jsonObject = new JSONObject(response.body().string());
-            JSONObject jsonObjectSumo = jsonObject.getJSONObject("data").getJSONObject("SUMO").getJSONObject("quote").getJSONObject("BTC");
-            JSONObject jsonObjectRyo = jsonObject.getJSONObject("data").getJSONObject("RYO").getJSONObject("quote").getJSONObject("BTC");
-            JSONObject jsonObjectIntense = jsonObject.getJSONObject("data").getJSONObject("LTHN").getJSONObject("quote").getJSONObject("BTC");
-            JSONObject jsonObjectMasari = jsonObject.getJSONObject("data").getJSONObject("MSR").getJSONObject("quote").getJSONObject("BTC");
-            JSONObject jsonObjectLoki = jsonObject.getJSONObject("data").getJSONObject("LOKI").getJSONObject("quote").getJSONObject("BTC");
+            JSONObject jsonObjectSumo = jsonObject.getJSONObject("data").getJSONObject("SUMO").getJSONObject("quote").getJSONObject("EUR");
+            JSONObject jsonObjectRyo = jsonObject.getJSONObject("data").getJSONObject("RYO").getJSONObject("quote").getJSONObject("EUR");
+            JSONObject jsonObjectIntense = jsonObject.getJSONObject("data").getJSONObject("LTHN").getJSONObject("quote").getJSONObject("EUR");
+            JSONObject jsonObjectMasari = jsonObject.getJSONObject("data").getJSONObject("MSR").getJSONObject("quote").getJSONObject("EUR");
+            JSONObject jsonObjectLoki = jsonObject.getJSONObject("data").getJSONObject("LOKI").getJSONObject("quote").getJSONObject("EUR");
 
             sumoRate = jsonObjectSumo.getDouble("price");
             sumoChange7d = jsonObjectSumo.getDouble("percent_change_7d");
@@ -127,19 +127,19 @@ public class Prices {
 
             amount = amount * 0.9;
             amount = amount * 0.6; //23-09-2018
-            amount = amount * 0.9;
+            amount = amount * 0.80;
 
             amount = removeRateChangeAmount(masariChange7d, amount);
         } else if (currency.equals("loki")) {//////////////////////////////////////////////
             amount = randomAmount(lokiRate);
             amount = amount * 0.7;
             amount = removeClaimsAmount(amount, claimsToday);
-            amount = amount * 0.9;
+            amount = amount * 0.78;
             amount = amount * 0.6;
 
             amount = removeRateChangeAmount(lokiChange7d, amount);
         }
-        amount = amount * 0.95;
+        amount = amount * 0.90;
         if (claimsToday == 1) {
             amount = amount * 3;
         }
@@ -148,17 +148,17 @@ public class Prices {
     }
 
     public static double randomAmount(double rate) {
-        double amount = 0.00000007 / rate;
+        double amount = 0.00035 / rate;
         Random rand = new Random();
         int value = rand.nextInt(100) + 1;
         if (value <= 50) {
-            amount = 0.00000007 / rate;
+            amount = 0.00035 / rate;
         } else if (value <= 91) {
-            amount = 0.00000015 / rate;
+            amount = 0.00075 / rate;
         } else if (value <= 98) {
-            amount = 0.00000260 / rate;
+            amount = 0.013 / rate;
         } else if (value <= 100) {
-            amount = 0.00000560 / rate;
+            amount = 0.028 / rate;
         }
         return amount;
     }

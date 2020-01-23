@@ -29,7 +29,7 @@ public class WithdrawHandler {
         String table = ClaimHandler.getTable(currency);
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE balance > " + getWithdrawLimit(currency));
+            ResultSet rs = stmt.executeQuery("SELECT * from " + table + " WHERE payment = 1 AND balance > " + getWithdrawLimit(currency));
             while (rs.next()) {
                 JSONObject item = new JSONObject();
                 double balance = rs.getDouble("balance");
