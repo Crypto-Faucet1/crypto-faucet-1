@@ -33,7 +33,7 @@ public class Payments {
             Thread t = new Thread(() -> {
                 try {
                     System.out.println("Processing Sumo payments");
-                    proccessPayments("sumo");
+                    processPayments("sumo");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -44,7 +44,7 @@ public class Payments {
                 }
                 try {
                     System.out.println("Processing Ryo payments");
-                    proccessPayments("ryo");
+                    processPayments("ryo");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -55,7 +55,7 @@ public class Payments {
                 }
                 try {
                     System.out.println("Processing masari payments");
-                    proccessPayments("masari");
+                    processPayments("masari");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -66,13 +66,13 @@ public class Payments {
                 }
                 try {
                     System.out.println("Processing intense payments");
-                    proccessPayments("intense");
+                    processPayments("intense");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 try {
                     System.out.println("Processing loki payments");
-                    proccessPayments("loki");
+                    processPayments("loki");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -81,39 +81,39 @@ public class Payments {
         }
     }
 
-    static String startProccessPayment(Request request, Response response) {
+    static String startProcessPayment(Request request, Response response) {
         if (request.queryParams("currency").equals("sumo")) {
             try {
                 System.out.println("Processing Sumo payments");
-                proccessPayments("sumo");
+                processPayments("sumo");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else if (request.queryParams("currency").equals("ryo")) {
             try {
                 System.out.println("Processing Ryo payments");
-                proccessPayments("ryo");
+                processPayments("ryo");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else if (request.queryParams("currency").equals("intense")) {
             try {
                 System.out.println("Processing intense payments");
-                proccessPayments("intense");
+                processPayments("intense");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else if (request.queryParams("currency").equals("masari")) {
             try {
                 System.out.println("Processing masari payments");
-                proccessPayments("masari");
+                processPayments("masari");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else if (request.queryParams("currency").equals("loki")) {
             try {
                 System.out.println("Processing loki payments");
-                proccessPayments("loki");
+                processPayments("loki");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -121,11 +121,16 @@ public class Payments {
         return "";
     }
 
-    static void proccessPayments(String currency) {
+    static void processPayments(String currency) {
         String table = ClaimHandler.getTable(currency);
         JSONArray intAddress = new JSONArray();
         JSONArray jsonArray = new JSONArray();
         long lastTime = 0;
+
+        long normalTime = 345600000;
+        if (currency.equals("intense") || currency.equals("masari") || currency.equals("sumo")) {
+            normalTime = 0;
+        }
         try {
             Statement stmt = ClaimHandler.conn.createStatement();
             ResultSet rs;
@@ -150,8 +155,7 @@ public class Payments {
                 }
                 if (rs.getString("address").substring(0, 4).equals("Sumi") || rs.getString("address").substring(0, 4).equals("RYoN") ||
                         rs.getString("address").substring(0, 2).equals("Na") || masariIntAdr) {
-                    if (new Date().getTime() - payoutDayReached > 86400000) {
-                        balance = balance - 0.015;
+                    if (new Date().getTime() - payoutDayReached > normalTime) {
                         double ma = balance;
                         if (currency.equals("masari")) {
                             ma = balance * 1000;
@@ -184,11 +188,6 @@ public class Payments {
             e.printStackTrace();
         }
         long diff = new Date().getTime() - lastTime;
-
-        long normalTime = 345600000;
-        if (currency.equals("intense") || currency.equals("masari")) {
-            normalTime = 0;
-        }
 
         //payments for normal/sub addresses
         if (jsonArray.length() >= 3 || diff > normalTime && jsonArray.length() > 0) {
@@ -235,6 +234,9 @@ public class Payments {
                 ps.close();
             } catch (SQLException e) {
                 e.printStackTrace();
+            }
+            if (currency.equals("sumo") || currency.equals("masari") || currency.equals("intense")){
+                processPayments(currency);
             }
         }
         return res;
