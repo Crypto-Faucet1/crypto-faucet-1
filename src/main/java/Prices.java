@@ -83,9 +83,8 @@ public class Prices {
 
             amount = amount * 0.6;
             amount = amount * 0.75;
-            amount = amount * 0.92; //21-04-2018; -0,45 totaal ; 0,87%
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
-            amount = amount * 0.95; //12-08-2018
+            amount = amount * 0.93; //12-08-2018
             amount = amount * 0.6; //23-09-2018
             amount = amount * 0.9;
             amount = amount * 0.8;
@@ -101,7 +100,7 @@ public class Prices {
             amount = amount * 0.6;
             amount = amount * 0.75;
             amount = amount * 0.73; //27-05-2018; -1,19 totaal; 0,828%
-            amount = amount * 0.9; //16-09-2018
+            amount = amount * 0.93; //16-09-2018
             amount = amount * 0.6; //23-09-2018
 
             amount = removeRateChangeAmount(ryoChange7d, amount);
@@ -115,7 +114,7 @@ public class Prices {
             amount = amount * 0.6;
             amount = amount * 0.6; //23-09-2018
             amount = amount * 0.65; //25-09-2018
-            amount = amount * 0.78;
+            amount = amount * 0.70;
 
             amount = removeRateChangeAmount(intenseChange7d, amount);
         } else if (currency.equals("masari")) {//////////////////////////////////////////////
@@ -128,6 +127,7 @@ public class Prices {
             amount = amount * 0.9;
             amount = amount * 0.6; //23-09-2018
             amount = amount * 0.80;
+            amount = amount * 0.77;
 
             amount = removeRateChangeAmount(masariChange7d, amount);
         } else if (currency.equals("loki")) {//////////////////////////////////////////////
@@ -136,6 +136,7 @@ public class Prices {
             amount = removeClaimsAmount(amount, claimsToday);
             amount = amount * 0.78;
             amount = amount * 0.6;
+            amount = amount * 0.77  ;
 
             amount = removeRateChangeAmount(lokiChange7d, amount);
         }
@@ -177,10 +178,10 @@ public class Prices {
     }
 
     public static double removeClaimsAmount(double amount, int claimsToday) {
-        if (claimsToday >= 10 && claimsToday <= 15) {
-            amount = amount * 0.80;
+        if (claimsToday >= 6 && claimsToday <= 11) {
+            amount = amount * 0.78;
         } else if (claimsToday >= 16 && claimsToday <= 20) {
-            amount = amount * 0.60;
+            amount = amount * 0.58;
         } else if (claimsToday >= 21 && claimsToday <= 26) {
             amount = amount * 0.48;
         } else if (claimsToday >= 27 && claimsToday <= 35) {

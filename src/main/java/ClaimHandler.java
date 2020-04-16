@@ -54,7 +54,8 @@ public class ClaimHandler {
         String ip = request.queryParams("ip");
         String currency = request.queryParams("currency");
         String userAgent = request.queryParamOrDefault("user-agent", "no");
-        return claim(address, captcha, ip, currency, userAgent).toString();
+        String captchaType = request.queryParamOrDefault("captchaType", "recaptcha");
+        return claim(address, captcha, ip, currency, userAgent, captchaType).toString();
     }
 
     static String getTable(String currency) {
@@ -73,7 +74,7 @@ public class ClaimHandler {
         return table;
     }
 
-    private JSONObject claim(String address, String captcha, String ip, String currency, String userAgent) {
+    private JSONObject claim(String address, String captcha, String ip, String currency, String userAgent, String captchaType) {
         String table = getTable(currency);
         boolean comp = true;
         int fraudScore = -1;
@@ -90,7 +91,7 @@ public class ClaimHandler {
         int error = 0;
         boolean paymentPending = false;
 
-        if (checkCaptcha(captcha, ip, currency) && !address.equals("")) {
+        if (checkCaptcha(captcha, ip, currency, captchaType) && !address.equals("")) {
             if (!userAgent.equals("no")) {
                 try {
                     fraudScore = IpHub.getIpq(ip, userAgent).getFraudScore();//get fraudscore
@@ -165,21 +166,21 @@ public class ClaimHandler {
                 claimAmount = Prices.getClaimAmount(claimsToday, currency);
                 if (currency.equals("sumo") || currency.equals("ryo") || currency.equals("masari") || currency.equals("loki")) {
                     if (balance >= 0.3) {
-                        claimAmount = claimAmount * 0.7;
+                        claimAmount = claimAmount * 0.75;
                     } else if (balance > 0.12) {
                         claimAmount = claimAmount * 0.95;
                     }
                 } else if (currency.equals("intense")) {
                     if (balance > 45) {
-                        claimAmount = claimAmount * 0.6;
+                        claimAmount = claimAmount * 0.7;
                     } else if (balance > 15) {
                         claimAmount = claimAmount * 0.9;
                     }
                 }
                 if (fraudScore == 100) {
-                    claimAmount = claimAmount * 0.65;
+                    claimAmount = claimAmount * 0.68;
                 } else if (fraudScore >= 75) {
-                    claimAmount = claimAmount * 0.80;
+                    claimAmount = claimAmount * 0.78;
                 }
 
                 claimAmount = claimAmount * (1 + dailyBonus);
@@ -295,29 +296,14 @@ public class ClaimHandler {
         return claimItem;
     }
 
-    private boolean checkCaptcha(String captcha, String ip, String currency) {
+
+
+    private boolean checkCaptcha(String captchaStr, String ip, String currency, String captchaType) {
         boolean comp = true;
-        ///recaptcha
-        OkHttpClient client = new OkHttpClient();
-
-            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://www.google.com/recaptcha/api/siteverify").newBuilder();
-            urlBuilder.addQueryParameter("secret", "6LfWYTwUAAAAAFcjH1RNrVV8WkW8rSy3nwzPSVZn");
-            urlBuilder.addQueryParameter("response", captcha);
-            urlBuilder.addQueryParameter("remoteip", ip);
-            String url = urlBuilder.build().toString();
-
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .build();
-        try {
-            okhttp3.Response response = client.newCall(request).execute();
-            JSONObject jsonObject = new JSONObject(response.body().string());
-            comp = jsonObject.getBoolean("success");
-            if (!comp) {
-                System.out.println("Recaptcha failed ip: " + ip + " " + currency);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (captchaType.equals("recaptcha")){
+            comp = captcha.checkRecaptcha(captchaStr, ip, currency);
+        } else {
+            comp = captcha.checkHCaptcha(captchaStr, ip, currency);
         }
 
         JSONArray jsonArrayIp = getJsonarrayIp(currency);

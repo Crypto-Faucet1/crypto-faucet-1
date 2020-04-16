@@ -16,13 +16,13 @@ public class ValidateAddress {
         if (currency.equals("sumo")) {
             url = "https://server.koenhabets.nl/sumo/json_rpc";
         } else if (currency.equals("ryo")) {
-            url = "http://127.0.0.1:8889/json_rpc";
+            url = "http://vps.koenhabets.nl:4110/ryo/json_rpc";
         } else if (currency.equals("intense")) {
-            url = "http://127.0.0.1:4878/json_rpc";
+            url = "http://vps.koenhabets.nl:4110/lethean/json_rpc";
         } else if (currency.equals("masari")) {
-            url = "http://127.0.0.1:8887/json_rpc";
+            url = "http://vps.koenhabets.nl:4110/masari/json_rpc";
         } else if (currency.equals("loki")) {
-            url = "https://server.koenhabets.nl/loki/json_rpc";
+            url = "http://127.0.0.1:8886/json_rpc";
         }
         return url;
     }

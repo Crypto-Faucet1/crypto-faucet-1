@@ -159,7 +159,7 @@ public class Payments {
                         double ma = balance;
                         if (currency.equals("masari")) {
                             ma = balance * 1000;
-                        } else if (currency.equals("intense")) {
+                        } else if (currency.equals("intense") || currency.equals("lethean")) {
                             ma = balance / 10;
                         }
                         double ase = WithdrawHandler.round(ma, 2) * 1000000000;
@@ -235,7 +235,7 @@ public class Payments {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            if (currency.equals("sumo") || currency.equals("masari") || currency.equals("intense")){
+            if (currency.equals("sumo") || currency.equals("masari") || currency.equals("intense")) {
                 processPayments(currency);
             }
         }
@@ -367,12 +367,28 @@ public class Payments {
             System.out.println("Adding payment to mysql");
             Statement stmt = ClaimHandler.conn.createStatement();
             stmt.executeUpdate("INSERT INTO payments VALUES ('" + item.getTxHash() + "', '" + getTimeString(item.getDate())
-                    + "', '" + item.getTxKey() + "', '" + item.getAmount() + "', '" + item.getReceipents().toString() + "', '" + item.getCurrency() + "')");
+                    + "', '" + item.getTxKey() + "', '" + item.getAmount() + "', '" + item.getReceipents().toString() + "', '"
+                    + item.getCurrency() + "', '" + getAmountEur(item.getAmount(), item.getCurrency()) + "')");
             stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
+    static Double getAmountEur(Double amount, String currency) {
+        Double amountEur = 0.0;
+        if (currency.equals("sumo")) {
+            amountEur = amount * Prices.sumoRate;
+        } else if (currency.equals("ryo")) {
+            amountEur = amount * Prices.ryoRate;
+        } else if (currency.equals("intense") || currency.equals("lethean")) {
+            amountEur = amount * Prices.intenseRate;
+        } else if (currency.equals("masari")) {
+            amountEur = amount * Prices.masariRate;
+        } else if (currency.equals("loki")) {
+            amountEur = amount * Prices.lokiRate;
+        }
+        return amountEur;
     }
 
     static String getTimeString(long date) {
@@ -383,18 +399,7 @@ public class Payments {
     }
 
     static String sendPostRequest(JSONArray recipients, String currency) throws IOException {
-        String url = "";
-        if (currency.equals("sumo")) {
-            url = "https://server.koenhabets.nl/sumo/json_rpc";
-        } else if (currency.equals("ryo")) {
-            url = "http://127.0.0.1:8889/json_rpc";
-        } else if (currency.equals("intense")) {
-            url = "http://127.0.0.1:4878/json_rpc";
-        } else if (currency.equals("masari")) {
-            url = "http://127.0.0.1:8887/json_rpc";
-        } else if (currency.equals("loki")) {
-            url = "https://server.koenhabets.nl/loki/json_rpc";
-        }
+        String url = ValidateAddress.getRpcAddress(currency);
         String cont = "";
 
         String asydfuh = "";
@@ -443,21 +448,11 @@ public class Payments {
         return cont;
     }
 
+
     static boolean intAdrPostRequest(String address, String currency) {
         String cont = "";
         boolean isIntAddress = false;
-        String url = "https://server.koenhabets.nl/" + currency + "/json_rpc";
-        if (currency.equals("sumo")) {
-            url = "https://server.koenhabets.nl/sumo/json_rpc";
-        } else if (currency.equals("ryo")) {
-            url = "http://127.0.0.1:8889/json_rpc";
-        } else if (currency.equals("intense")) {
-            url = "http://127.0.0.1:4878/json_rpc";
-        } else if (currency.equals("masari")) {
-            url = "http://127.0.0.1:8887/json_rpc";
-        } else if (currency.equals("loki")) {
-            url = "https://server.koenhabets.nl/loki/json_rpc";
-        }
+        String url = ValidateAddress.getRpcAddress(currency);
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"split_integrated_address\",\"params\"" +
                 ":{\"integrated_address\": \"" + address + "\"}}' " +
                 "-H 'Content-Type: application/json";
