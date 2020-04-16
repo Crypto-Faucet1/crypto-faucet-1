@@ -406,9 +406,13 @@ public class Payments {
         if (currency.equals("intense")) {
             asydfuh = ",\"mixin\":10";
         }
+        int priority = 0;
+        if (currency.equals("loki")){
+            priority = 1;
+        }
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"transfer\",\"params\":{\"destinations\":" +
                 recipients
-                + ",\"account_index\":0,\"subaddr_indices\":[0],\"priority\":0,\"get_tx_key\":true" + asydfuh + "}}";
+                + ",\"account_index\":0,\"subaddr_indices\":[0],\"priority\":0,\"get_tx_key\":true" + asydfuh + ",\"priority\": " + priority + "}}";
         byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
         try {
