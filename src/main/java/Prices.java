@@ -74,7 +74,7 @@ public class Prices {
 
     public static double getClaimAmount(int claimsToday, String currency) {
         double amount = 0;
-        if (currency.equals("sumo")) {
+        if (currency.equals("sumo")) {//////////////////////////////////////////////
             amount = randomAmount(sumoRate);
 
             amount = amount * 0.7;
@@ -90,7 +90,7 @@ public class Prices {
             amount = amount * 0.8;
 
             amount = removeRateChangeAmount(sumoChange7d, amount);
-        } else if (currency.equals("ryo")) {
+        } else if (currency.equals("ryo")) {//////////////////////////////////////////////
             amount = randomAmount(ryoRate);
 
             amount = amount * 0.7;
@@ -104,7 +104,7 @@ public class Prices {
             amount = amount * 0.6; //23-09-2018
 
             amount = removeRateChangeAmount(ryoChange7d, amount);
-        } else if (currency.equals("intense")) {
+        } else if (currency.equals("intense")) {//////////////////////////////////////////////
             amount = randomAmount(intenseRate);
 
             amount = amount * 0.7;
@@ -117,7 +117,7 @@ public class Prices {
             amount = amount * 0.70;
 
             amount = removeRateChangeAmount(intenseChange7d, amount);
-        } else if (currency.equals("masari")) {
+        } else if (currency.equals("masari")) {//////////////////////////////////////////////
             amount = randomAmount(masariRate);
 
             amount = amount * 0.7;
@@ -130,7 +130,7 @@ public class Prices {
             amount = amount * 0.77;
 
             amount = removeRateChangeAmount(masariChange7d, amount);
-        } else if (currency.equals("loki")) {
+        } else if (currency.equals("loki")) {//////////////////////////////////////////////
             amount = randomAmount(lokiRate);
             amount = amount * 0.7;
             amount = removeClaimsAmount(amount, claimsToday);
@@ -145,7 +145,7 @@ public class Prices {
         if (claimsToday == 1) {
             amount = amount * 3;
         }
-
+        amount = amount * Config.config.getClaimPercentage();
         return WithdrawHandler.round(amount, 5);
     }
 
