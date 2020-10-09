@@ -30,9 +30,7 @@ public class ValidateAddress {
     public static boolean validateAddress(String address, String currency){
         boolean valid = true;
         String url = getRpcAddress(currency);
-        /*if (currency.equals("sumo")) {
-            url = "http://127.0.0.1:19733/json_rpc";
-        }*/
+
         String urlParameters = "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"split_integrated_address\",\"params\"" +
                 ":{\"integrated_address\": \"" + address + "\"}}' " +
                 "-H 'Content-Type: application/json";

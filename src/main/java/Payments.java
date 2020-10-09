@@ -127,8 +127,8 @@ public class Payments {
         JSONArray jsonArray = new JSONArray();
         long lastTime = 0;
 
-        long normalTime = 345600000;
-        if (currency.equals("intense") || currency.equals("masari") || currency.equals("sumo")) {
+        long normalTime = 259200000;
+        if (currency.equals("intense") || currency.equals("masari") || currency.equals("sumo") || currency.equals("ryo")) {
             normalTime = 0;
         }
         try {
@@ -235,8 +235,8 @@ public class Payments {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            if (currency.equals("sumo") || currency.equals("masari") || currency.equals("intense")) {
-                processPayments(currency);
+            if (currency.equals("sumo") || currency.equals("ryo") || currency.equals("intense") || currency.equals("masari")) {
+                new Thread(() -> processPayments(currency)).start();
             }
         }
         return res;
