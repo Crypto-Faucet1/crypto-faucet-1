@@ -8,6 +8,7 @@ public class x {
 
     public static void main(String args[]) {
         Spark.port(9899);
+        new Config();
         ClaimHandler claim = new ClaimHandler();
         GetBalance getBalance = new GetBalance();
         WithdrawHandler withdrawHandler = new WithdrawHandler();

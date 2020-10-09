@@ -136,7 +136,7 @@ public class Prices {
             amount = removeClaimsAmount(amount, claimsToday);
             amount = amount * 0.78;
             amount = amount * 0.6;
-            amount = amount * 0.77  ;
+            amount = amount * 0.77;
 
             amount = removeRateChangeAmount(lokiChange7d, amount);
         }
@@ -144,7 +144,7 @@ public class Prices {
         if (claimsToday == 1) {
             amount = amount * 3;
         }
-
+        amount = amount * Config.config.getClaimPercentage();
         return WithdrawHandler.round(amount, 5);
     }
 
