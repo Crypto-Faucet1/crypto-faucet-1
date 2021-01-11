@@ -222,10 +222,11 @@ public class ClaimHandler {
                         String insert = "UPDATE " + table + " SET balance='" + round(balance, 6) + "', lastClaim='" + currentTime
                                 + "', dailyLastClaim='" + currentTime2 + "', dailyBonus='" + round(dailyBonus, 2) + "', claims='" + claims + "', totalPaid='" + totalPaid +
                                 "', lastClaimDay='" + lastClaimDay + "', claimsToday='" + claimsToday + "', lastBonusDay='" + lastBonusDay + "', payoutDayReached='"
-                                + Payments.getTimeString(payoutDayReached) + "', ip='" + ip + "' WHERE address=?";
+                                + Payments.getTimeString(payoutDayReached) + "', ip=? WHERE address=?";
                         try {
                             PreparedStatement ps = conn.prepareStatement(insert);
                             ps.setString(1, address);
+                            ps.setString(2, ip);
                             ps.executeUpdate();
                             ps.close();
                         } catch (SQLException e) {
@@ -241,10 +242,11 @@ public class ClaimHandler {
 
                         String insert = "INSERT INTO " + table + " VALUES (?, '" + round(balance, 6) + "', '" + currentTime
                                 + "', '" + currentTime2 + "', '" + dailyBonus + "', '" + claims + "', '" + totalPaid + "', '" + lastClaimDay + "', '" + claimsToday
-                                + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', '" + ip + "', 0)";
+                                + "', '" + lastBonusDay + "', '" + Payments.getTimeString(payoutDayReached) + "', ?, 0)";
                         try {
                             PreparedStatement ps = conn.prepareStatement(insert);
                             ps.setString(1, address);
+                            ps.setString(2, ip);
                             ps.executeQuery();
                             ps.close();
                         } catch (SQLException e) {

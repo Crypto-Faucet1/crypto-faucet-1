@@ -246,8 +246,9 @@ public class Payments {
         String currency = request.queryParams("currency");
         JSONArray jsonArray = new JSONArray();
         try {
-            Statement stmt = ClaimHandler.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM payments WHERE currency='" + currency + "' ORDER BY date DESC");
+            PreparedStatement stmt = ClaimHandler.conn.prepareStatement("SELECT * FROM payments WHERE currency = ? ORDER BY date DESC");
+            stmt.setString(1, currency);
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("date", getTimeString(rs.getTimestamp("date").getTime()));
@@ -348,8 +349,9 @@ public class Payments {
     private PaymentItem getLatestPayment(String currency) {
         PaymentItem lastestPayment = null;
         try {
-            Statement stmt = ClaimHandler.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT TOP 1 * FROM payments WHERE currency='" + currency + "'ORDER BY date DESC");
+            PreparedStatement stmt = ClaimHandler.conn.prepareStatement("SELECT TOP 1 * FROM payments WHERE currency='?' ORDER BY date DESC");
+            stmt.setString(1, currency);
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 lastestPayment = new PaymentItem(rs.getString(1), rs.getTimestamp(2).getTime(), rs.getString(3),
                         rs.getDouble(4), new JSONArray(rs.getString(5)), rs.getString(6));
