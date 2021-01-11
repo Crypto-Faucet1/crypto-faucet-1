@@ -1,0 +1,11 @@
+image: koen20/faucet:latest
+manifests:
+  - image: koen20/faucet:amd64
+    platform:
+      architecture: amd64
+      os: linux
+  - image: koen20/faucet:arm32v7
+    platform:
+      architecture: arm
+      os: linux
+      variant: v7
