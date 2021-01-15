@@ -16,7 +16,7 @@ RUN chown -R $APPLICATION_USER /app
 
 USER $APPLICATION_USER
 
-COPY --from=builder /usr/src/app/x-1.0/* /app/
+COPY --from=builder /usr/src/app/x-1.0/ /app/
 WORKDIR /app
 
-CMD bin/x
+CMD /x-1.0/bin/x
