@@ -19,4 +19,4 @@ USER $APPLICATION_USER
 COPY --from=builder /usr/src/app/x-1.0/ /app/
 WORKDIR /app
 
-CMD /x-1.0/bin/x
+CMD x-1.0/bin/x
