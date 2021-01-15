@@ -14,15 +14,15 @@ public class ValidateAddress {
     public static String getRpcAddress(String currency){
         String url = "";
         if (currency.equals("sumo")) {
-            url = "https://server.koenhabets.nl/sumo/json_rpc";
+            url = x.configItem.getSumoRpc();
         } else if (currency.equals("ryo")) {
-            url = "http://vps.koenhabets.nl:4110/ryo/json_rpc";
+            url = x.configItem.getRyoRpc();
         } else if (currency.equals("intense")) {
-            url = "http://vps.koenhabets.nl:4110/lethean/json_rpc";
+            url = x.configItem.getIntenseRpc();
         } else if (currency.equals("masari")) {
-            url = "http://vps.koenhabets.nl:4110/masari/json_rpc";
+            url = x.configItem.getMasariRpc();
         } else if (currency.equals("loki")) {
-            url = "http://127.0.0.1:8886/json_rpc";
+            url = x.configItem.getLokiRpc();
         }
         return url;
     }

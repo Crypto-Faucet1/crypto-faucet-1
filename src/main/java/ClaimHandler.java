@@ -1,7 +1,3 @@
-import okhttp3.FormBody;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
@@ -23,9 +19,10 @@ public class ClaimHandler {
     private JSONArray jsonArrayIpMasari = new JSONArray();
     private JSONArray jsonArrayIpLoki = new JSONArray();
 
-    ClaimHandler() {
+    ClaimHandler(ConfigItem configItem) {
         try {
-            conn = DriverManager.getConnection("jdbc:mariadb://127.0.0.1:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+            conn = DriverManager.getConnection("jdbc:mariadb://" + configItem.getMysqlHost() + "/" + configItem.getMysqlDb(),
+                    configItem.getMysqlHost(), configItem.getMysqlPassword());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -40,7 +37,8 @@ public class ClaimHandler {
             try {
                 if (!conn.isValid(2500)) {
                     conn.close();
-                    conn = DriverManager.getConnection("jdbc:mariadb://127.0.0.1:3306/faucet", "faucet", "Tsav#y2fH*7hfZy6UgTT");
+                    conn = DriverManager.getConnection("jdbc:mariadb://" + x.configItem.getMysqlHost() + "/" + x.configItem.getMysqlDb(),
+                            x.configItem.getMysqlHost(), x.configItem.getMysqlPassword());
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -255,10 +253,11 @@ public class ClaimHandler {
                             comp = false;
                         }
                     }
-                    String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" + claimAmount + "', '" + ip + "', '" + currency + "')";
+                    String insert2 = "INSERT INTO claims VALUES (NULL, '" + sdf.format(new Date()) + "', ?, '" + claimAmount + "', ?, '" + currency + "')";
                     try {
                         PreparedStatement ps = conn.prepareStatement(insert2);
                         ps.setString(1, address);
+                        ps.setString(2, ip);
                         ps.executeQuery();
                         ps.close();
                     } catch (SQLException e) {

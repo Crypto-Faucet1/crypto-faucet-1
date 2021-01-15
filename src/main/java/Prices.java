@@ -37,7 +37,7 @@ public class Prices {
         OkHttpClient client = new OkHttpClient();
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest" +
-                "?symbol=SUMO,RYO,LTHN,MSR,LOKI&convert=EUR&CMC_PRO_API_KEY=c67d6a99-ea22-4f03-890e-38817ed7141a").newBuilder();
+                "?symbol=SUMO,RYO,LTHN,MSR,LOKI&convert=EUR&CMC_PRO_API_KEY=" + x.configItem.getCmcApiKey()).newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -145,7 +145,7 @@ public class Prices {
         if (claimsToday == 1) {
             amount = amount * 3;
         }
-        amount = amount * Config.config.getClaimPercentage();
+        amount = amount * x.configItem.getClaimPercentage();
         return WithdrawHandler.round(amount, 5);
     }
 
