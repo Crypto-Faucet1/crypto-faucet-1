@@ -22,7 +22,7 @@ public class ClaimHandler {
     ClaimHandler(ConfigItem configItem) {
         try {
             conn = DriverManager.getConnection("jdbc:mariadb://" + configItem.getMysqlHost() + "/" + configItem.getMysqlDb(),
-                    configItem.getMysqlHost(), configItem.getMysqlPassword());
+                    configItem.getMysqlUsername(), configItem.getMysqlPassword());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -38,7 +38,7 @@ public class ClaimHandler {
                 if (!conn.isValid(2500)) {
                     conn.close();
                     conn = DriverManager.getConnection("jdbc:mariadb://" + x.configItem.getMysqlHost() + "/" + x.configItem.getMysqlDb(),
-                            x.configItem.getMysqlHost(), x.configItem.getMysqlPassword());
+                            x.configItem.getMysqlUsername(), x.configItem.getMysqlPassword());
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
