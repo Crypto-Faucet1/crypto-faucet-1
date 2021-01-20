@@ -6,7 +6,7 @@ import java.util.*;
 public class Stats {
     public Stats() {
         Timer updateTimer = new Timer();
-        updateTimer.scheduleAtFixedRate(new update(), millisToNextDay(Calendar.getInstance()) - 120000, 86400000);//1 day
+        updateTimer.scheduleAtFixedRate(new update(), millisToNextDay(Calendar.getInstance()) - 86400000 - 60000, 86400000);//1 day
     }
 
     public class update extends TimerTask {
