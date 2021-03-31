@@ -37,7 +37,7 @@ public class Prices {
         OkHttpClient client = new OkHttpClient();
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest" +
-                "?symbol=SUMO,RYO,LTHN,MSR,LOKI&convert=EUR&CMC_PRO_API_KEY=" + x.configItem.getCmcApiKey()).newBuilder();
+                "?symbol=SUMO,RYO,LTHN,MSR,OXEN&convert=EUR&CMC_PRO_API_KEY=" + x.configItem.getCmcApiKey()).newBuilder();
         String url = urlBuilder.build().toString();
 
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -50,7 +50,7 @@ public class Prices {
             JSONObject jsonObjectRyo = jsonObject.getJSONObject("data").getJSONObject("RYO").getJSONObject("quote").getJSONObject("EUR");
             JSONObject jsonObjectIntense = jsonObject.getJSONObject("data").getJSONObject("LTHN").getJSONObject("quote").getJSONObject("EUR");
             JSONObject jsonObjectMasari = jsonObject.getJSONObject("data").getJSONObject("MSR").getJSONObject("quote").getJSONObject("EUR");
-            JSONObject jsonObjectLoki = jsonObject.getJSONObject("data").getJSONObject("LOKI").getJSONObject("quote").getJSONObject("EUR");
+            JSONObject jsonObjectLoki = jsonObject.getJSONObject("data").getJSONObject("OXEN").getJSONObject("quote").getJSONObject("EUR");
 
             sumoRate = jsonObjectSumo.getDouble("price");
             sumoChange7d = jsonObjectSumo.getDouble("percent_change_7d");
